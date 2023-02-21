@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="3778b194-39ec-4f9e-9282-452049d11c3a" name="Changes" comment="front-end">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/.idea/react-mobile.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/config-overrides.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/package-lock.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/favicon.ico" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/logo192.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/logo512.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/manifest.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/robots.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/App.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/App.test.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/App.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/bin/close_bin.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/bin/map.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/bin/open_bin.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/bin/press_bin.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/components/Example.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/components/Logo.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/components/MenuItem.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/components/MenuToggle.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/components/Navigation.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/components/Scroll.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/components/avatar.less" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/components/demos-util.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/components/image.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/components/scroll.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/components/use-dimensions.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/index.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/index.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/less/Login.less" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/less/bin.less" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/less/google.less" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/less/homepage.less" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/less/map.less" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/logo.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/GoogleMap.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/HomePage.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/Login.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/Register.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/SceneComponent.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/bin.jsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/login.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/map.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/react-app-env.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/reportWebVitals.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/router/index.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/setupTests.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/store/index.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/src/store/reducer.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/tsconfig.json" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2LmGUnZiVpBYAh5dVYxXfMjMM7q" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/bin" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="AndroidSdkUpdater" />
+    <property name="ts.external.directory.path" value="$PROJECT_DIR$/dashboard/node_modules/typescript/lib" />
+    <property name="vue.rearranger.settings.migration" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/bin" />
+      <recent name="$PROJECT_DIR$/src/components" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/bin" />
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/src/router" />
+    </key>
+  </component>
+  <component name="RunManager" selected="JavaScript Debug.bin.html">
+    <configuration name="bin.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/react-mobile/src/pages/bin.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <configuration name="start" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="start" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="start:pre" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="start:pre" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JavaScript Debug.bin.html" />
+        <item itemvalue="npm.start" />
+        <item itemvalue="npm.start:pre" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3778b194-39ec-4f9e-9282-452049d11c3a" name="Changes" comment="" />
+      <created>1676468870095</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1676468870095</updated>
+      <workItem from="1676468875015" duration="20910000" />
+      <workItem from="1676540742525" duration="28707000" />
+      <workItem from="1676628669978" duration="164000" />
+      <workItem from="1676628873775" duration="2387000" />
+      <workItem from="1676647690758" duration="17965000" />
+      <workItem from="1676714025780" duration="3189000" />
+      <workItem from="1676729438911" duration="14144000" />
+      <workItem from="1676986448413" duration="2114000" />
+      <workItem from="1676989621098" duration="957000" />
+    </task>
+    <task id="LOCAL-00001" summary="front-end">
+      <created>1676988848624</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1676988848624</updated>
+    </task>
+    <task id="LOCAL-00002" summary="front-end">
+      <created>1676989833102</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1676989833102</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <MESSAGE value="front-end" />
+    <option name="LAST_COMMIT_MESSAGE" value="front-end" />
+  </component>
+</project>
