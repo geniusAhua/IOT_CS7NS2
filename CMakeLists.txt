@@ -4,5 +4,7 @@
 # CMakeLists in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.5)
 
+set(EXTRA_COMPONENT_DIRS "/Users/tl/Projects/IOT_CS7NS2/hardware")
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+
 project(IOT_CS7NS2)
