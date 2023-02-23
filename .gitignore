@@ -3,3 +3,4 @@ dashboard/node_modules
 **/sdkconfig
 **/sdkconfig.old
 **/.vscode
+**/**.DS_Store
