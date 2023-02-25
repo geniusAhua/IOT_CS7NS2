@@ -30,9 +30,9 @@ export default function BasicDemo() {
     console.log(Number(value==null?null:value))
     return (
         <>
-            <DemoBlock title=''>
+            <DemoBlock title='' background=''>
                 <Space block direction='vertical'>
-                    <Avatar src={demoAvatarImages[Number(value==null?null:value)]} style={{width:"30vw",height:"15vh",marginLeft:"-8vw"}}/>
+                    <Avatar src={demoAvatarImages[Number(value==null?null:value)]} style={{width:"50%",height:"15vh",marginLeft:"22vw"}}/>
                 </Space>
             </DemoBlock>
 
@@ -40,6 +40,7 @@ export default function BasicDemo() {
                 onClick={() => {
                     setVisible(true)
                 }}
+                style={{marginLeft:"34vw",marginTop:"1vh"}}
             >
                 choose
             </Button>
