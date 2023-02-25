@@ -1,7 +1,11 @@
 dashboard/node_modules
+<<<<<<< Updated upstream
 **/build/
 **/sdkconfig
 **/sdkconfig.old
 **/.vscode
 **/**.DS_Store
 **/cert
+=======
+**/.idea
+>>>>>>> Stashed changes
