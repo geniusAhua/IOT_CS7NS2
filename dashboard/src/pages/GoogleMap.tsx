@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
     FloatingPanel,
     SearchBar,
@@ -13,6 +13,29 @@ import {
 import Open_bin from "../bin/open_bin.jpg";
 // @ts-ignore
 import styles from '../less/google.less'
+import Footer from "../components/footer";
+import { GoogleMap, LoadScript, useJsApiLoader } from '@react-google-maps/api';
+
+
+const containerStyle = {
+    width: screen.width,
+    height: screen.height
+};
+
+const center = {
+    lat: -3.745,
+    lng: -38.523
+};
+const mapId:string = 'd07532df77f9d9a5'
+const options = {
+    // 将 `language` 属性添加到 `options` 对象中
+    ...{
+        zoomControl: true,
+        streetViewControl: false,
+    },
+    language: "en-GB" // 设置地图的语言为中文
+};
+
 
 const locations = [
     {
@@ -42,13 +65,24 @@ const nearbyList = [
 
 const anchors = [72, 72 + 119, window.innerHeight * 0.8]
 
+
 export default () => {
     const [focus, setFocus] = useState(false)
-
+    const { isLoaded } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: 'AIzaSyBxhljI-42-8Sn2UOAVf3Cw_9lH4otQ6vY',
+        libraries: ['geometry', 'drawing'],
+    });
     return (
         <>
-            <iframe src='https://amap.com' className={styles.map} style={{width:"200vw",height:"300vh"}}/>
-
+            {isLoaded &&<GoogleMap
+                    mapContainerStyle={containerStyle}
+                    center={center}
+                    zoom={10}
+                    options={options}
+               >
+            </GoogleMap>
+            }
             <FloatingPanel anchors={anchors}>
                 <Space block className={styles.search}>
                     <SearchBar
