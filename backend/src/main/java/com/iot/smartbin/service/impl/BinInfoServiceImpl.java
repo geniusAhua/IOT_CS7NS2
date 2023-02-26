@@ -1,8 +1,9 @@
 package com.iot.smartbin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.iot.smartbin.controller.mapper.BinMapper;
-import com.iot.smartbin.pojo.Bin;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.iot.smartbin.dao.mapper.BinMapper;
+import com.iot.smartbin.dao.pojo.Bin;
 import com.iot.smartbin.service.BinInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class BinInfoServiceImpl implements BinInfoService {
+public class BinInfoServiceImpl extends ServiceImpl<BinMapper, Bin> implements BinInfoService {
     @Autowired
     private BinMapper binMapper;
 
@@ -20,7 +21,8 @@ public class BinInfoServiceImpl implements BinInfoService {
     public Map<String, String> binInfo(Integer userId) {
         Map<String, String> map = new HashMap<>();
         QueryWrapper<Bin> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userId", userId);
+        queryWrapper.eq("user_id", userId);
+
         List<Bin> bins = binMapper.selectList(queryWrapper);
         for(Bin bin : bins){
             map.put("id", bin.getId().toString());

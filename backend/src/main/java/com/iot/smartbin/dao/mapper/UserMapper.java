@@ -1,7 +1,7 @@
-package com.iot.smartbin.controller.mapper;
+package com.iot.smartbin.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.iot.smartbin.pojo.User;
+import com.iot.smartbin.dao.pojo.User;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

@@ -1,8 +1,8 @@
 package com.iot.smartbin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.iot.smartbin.controller.mapper.UserMapper;
-import com.iot.smartbin.pojo.User;
+import com.iot.smartbin.dao.mapper.UserMapper;
+import com.iot.smartbin.dao.pojo.User;
 import com.iot.smartbin.service.RegisterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

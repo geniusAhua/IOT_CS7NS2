@@ -1,4 +1,4 @@
-package com.iot.smartbin.pojo;
+package com.iot.smartbin.dao.pojo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -9,10 +9,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class Bin {
     @TableId(type = IdType.AUTO)
     private Integer id;
-    private String username;
-    private String password;
-    private String photo;
+    private Integer userId;
+    private Float weight; // kg
+    private Integer height; // cm
+    private Float longitude;
+    private Float latitude;
+    private Boolean isFull;
 }

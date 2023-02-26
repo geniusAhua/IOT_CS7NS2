@@ -11,9 +11,8 @@ public class BinController {
     @Autowired
     private BinInfoService binInfoService;
 
-    @GetMapping("/api/bin/info/")
+    @GetMapping("/api/bin/info")
     public Map<String, String> getBinDetails(@RequestParam Integer userId){
         return binInfoService.binInfo(userId);
     }
-
 }
