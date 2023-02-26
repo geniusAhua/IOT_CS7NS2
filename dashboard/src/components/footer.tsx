@@ -18,7 +18,7 @@ export default function Footer() {
         <BottomNavigation sx={{ width:{width},height:48}} value={value} onChange={handleChange}>
             <BottomNavigationAction label="Recents" value="recents" icon={<RestoreIcon />} style={{height:'8vh',scale:'0.5',fontSize:"5px",position:"relative",left:"1%"}}/>
             <BottomNavigationAction label="Home" value="home" icon={<HomeIcon/>}style={{height:'8vh',scale:'0.5',fontSize:"5px",position:"relative"}}/>
-            <BottomNavigationAction label="Location" value="location" onClick={()=>navigate('../googleMap')} icon={<LocationOnIcon />}style={{height:'8vh',scale:'0.5',fontSize:"5px"}}/>
+            <BottomNavigationAction label="Location" value="location" onClick={()=>navigate('./googleMap')} icon={<LocationOnIcon />}style={{height:'8vh',scale:'0.5',fontSize:"5px"}}/>
         </BottomNavigation>
     );
 }

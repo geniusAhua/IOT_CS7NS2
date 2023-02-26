@@ -11,6 +11,7 @@
     "@emotion/styled": "^11.10.6",
     "@mui/icons-material": "^5.11.9",
     "@mui/material": "^5.11.10",
+    "@popperjs/core": "^2.11.6",
     "@react-google-maps/api": "^2.18.1",
     "@reduxjs/toolkit": "^1.9.2",
     "@testing-library/jest-dom": "^5.16.5",
@@ -30,7 +31,7 @@
     "customize-cra": "^1.0.0",
     "customize-cra-less-loader": "^2.0.0",
     "foca": "^1.3.0",
-    "framer-motion": "^9.0.4",
+    "framer-motion": "^9.1.7",
     "hzero-ui": "^1.0.83",
     "lib-flexible": "^0.3.2",
     "lorem-ipsum": "^2.0.8",
@@ -56,11 +57,12 @@
     "redux-thunk": "^2.4.2",
     "smart-background": "^1.0.11",
     "typescript": "^4.9.5",
+    "util": "^0.12.5",
     "web-vitals": "^2.1.4",
     "webpack-bundle-analyzer": "^4.8.0"
   },
   "scripts": {
-    "start": "set PORT=3011/ && react-app-rewired start",
+    "start": "HTTPS=true SSL_CRT_FILE=.cert/example.com+5.pem SSL_KEY_FILE=.cert/example.com+5-key.pem react-app-rewired start",
     "start:pre": "PORT=3011 cross-env REACT_APP_ENV=pre react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
@@ -91,6 +93,7 @@
     ]
   },
   "devDependencies": {
+    "@pwa/cli": "^0.5.4",
     "@types/mapbox-gl": "^2.7.10",
     "@types/react-map-gl": "^6.1.3",
     "@types/react-redux": "^7.1.25",

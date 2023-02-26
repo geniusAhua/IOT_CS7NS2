@@ -2,30 +2,57 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="3778b194-39ec-4f9e-9282-452049d11c3a" name="Changes" comment="front-end">
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/card.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/footer.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/header.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/stitches.config.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/Login_box.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/Username.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/paths.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/svg_container.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/use-flubber.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/router/Content.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/.cert/example.com+5-key.pem" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/.cert/example.com+5.pem" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/images/bg.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/images/logo.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/images/smartbin.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/offline.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/serviceworker.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/public/style.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dashboard/script.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.mvn/wrapper/maven-wrapper.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/mvnw" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/mvnw.cmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/SmartbinApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/common/ErrorMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/common/FatalMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/common/SuccessMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/common/WarningMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/config/WebCharacterEncodingFilter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/config/WebMvcConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/controller/AdminController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/controller/BinController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/dao/AdminMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/dao/BinMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/pojo/Admin.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/pojo/Bin.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/pojo/Consumer.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/service/AdminService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/service/BinInfoService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/service/impl/AdminServiceImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/iot/smartbin/service/impl/BinInfoServiceImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/iot/smartbin/SmartbinApplicationTests.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/dashboard/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dashboard/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/src/components/MenuItem.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/components/MenuItem.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/src/components/Scroll.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/components/Scroll.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/src/components/demos-util.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/components/demos-util.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/src/components/image.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/components/image.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/src/components/scroll.css" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/components/scroll.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/src/pages/GoogleMap.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/pages/GoogleMap.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/src/pages/HomePage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/pages/HomePage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dashboard/src/pages/Login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/pages/Login.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/public/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/public/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/src/components/footer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/components/footer.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/src/components/header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/components/header.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/src/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/src/pages/Username.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/pages/Username.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/src/react-app-env.d.ts" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/dashboard/src/router/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/src/router/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardware/.devcontainer/Dockerfile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardware/.devcontainer/devcontainer.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardware/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardware/main/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hardware/main/main.cpp" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,15 +76,14 @@
     </file-type-list>
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/dashboard/src/reportWebVitals.ts" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/dashboard/src/components/Example.tsx" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/dashboard/src/index.tsx" root0="SKIP_INSPECTION" />
     <setting file="file://$PROJECT_DIR$/dashboard/src/router/index.tsx" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/dashboard/package.json" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/dashboard/src/setupTests.ts" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/dashboard/package-lock.json" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/dashboard/src/App.tsx" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/dashboard/tsconfig.json" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/dashboard/src/index.tsx" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/dashboard/src/setupTests.ts" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/dashboard/src/reportWebVitals.ts" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/dashboard/src/App.tsx" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -77,7 +103,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/bin" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/dashboard/public/images" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="nodejs_package_manager_path" value="npm" />
@@ -87,8 +113,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/dashboard/public/images" />
+      <recent name="$PROJECT_DIR$/dashboard/.cert" />
+      <recent name="$PROJECT_DIR$/dashboard/src" />
+      <recent name="$PROJECT_DIR$/dashboard" />
       <recent name="$PROJECT_DIR$/src/bin" />
-      <recent name="$PROJECT_DIR$/src/components" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/bin" />
@@ -97,8 +126,21 @@
       <recent name="$PROJECT_DIR$/src/router" />
     </key>
   </component>
-  <component name="RunManager" selected="JavaScript Debug.bin.html">
+  <component name="RunManager" selected="npm.start (1)">
     <configuration name="bin.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/react-mobile/src/pages/bin.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <configuration name="index.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/IOT/dashboard/build/index.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <configuration name="start (1)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/dashboard/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="start" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
       <method v="2" />
     </configuration>
     <configuration name="start" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
@@ -123,6 +165,8 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.start (1)" />
+        <item itemvalue="JavaScript Debug.index.html" />
         <item itemvalue="JavaScript Debug.bin.html" />
         <item itemvalue="npm.start" />
         <item itemvalue="npm.start:pre" />
@@ -148,6 +192,8 @@
       <workItem from="1676989621098" duration="957000" />
       <workItem from="1677276672841" duration="407000" />
       <workItem from="1677330413674" duration="167000" />
+      <workItem from="1677335392268" duration="3343000" />
+      <workItem from="1677340141213" duration="13117000" />
     </task>
     <task id="LOCAL-00001" summary="front-end">
       <created>1676988848624</created>
@@ -196,5 +242,9 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="front-end" />
     <option name="LAST_COMMIT_MESSAGE" value="front-end" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

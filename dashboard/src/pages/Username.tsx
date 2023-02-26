@@ -19,10 +19,10 @@ export default function Username(){
                     <PasscodeInput keyboard={<NumberKeyboard />}/>
                 </Form.Item>
             </Form>
-            <Link to="../googleMap">
+            <Link to="./home/googleMap">
                 <Button style={{marginTop: '10vh',left:"14vw",height:"5.8vh",width:"25vw",borderRadius:"5"}}>login</Button>
             </Link>
-            <Link to="../reegister">
+            <Link to="../home/reegister">
                 <Button style={{marginTop: '10vh',left:"26vw",height:"5.8vh",width:"25vw",borderRadius:"5"}}>register</Button>
             </Link>
         </div>

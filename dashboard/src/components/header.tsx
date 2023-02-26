@@ -5,8 +5,8 @@ import {useLocation, useNavigate} from 'react-router-dom'
 export default () => {
     const navigate = useNavigate()
     const loaction = useLocation()
-    const back = () => navigate('../homepage')
-    let name = location.href.split('/')[3]
+    const back = () => navigate('./homepage')
+    let name = location.href.split('/')[4]
     return (
         <>
             <NavBar onBack={back} style={{
