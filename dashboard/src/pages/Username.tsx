@@ -37,6 +37,7 @@ export default function Username() {
             setCookie('username', form.name, 1);
             setCookie('password', form.password, 1);
             navigate('../home/googleMap')
+            window.location.reload()
         } else {
             alert("userName and password cannot be none")
         }
