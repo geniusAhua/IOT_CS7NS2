@@ -27,6 +27,7 @@ self.addEventListener('fetch', function (e) {
     })
     e.respondWith(cacheMatchPromise);
 });
+
 // 监听 activate 事件，清除缓存
 self.addEventListener('activate', function (e) {
     console.log('Service Worker 状态： activate');

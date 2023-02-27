@@ -5,10 +5,11 @@ import React, { useState } from 'react'
 import SVG from "./svg_container";
 import Username from "./Username";
 import Background from 'smart-background';
-const symbols = ['bin','smart','dublin','bin','smart','dublin']
+const symbols = []
 
 export default function Login(){
     const [open, set] = useState(true)
+
     return(
         <div>
             {open === false?

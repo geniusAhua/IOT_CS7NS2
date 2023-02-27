@@ -69,12 +69,12 @@ const anchors = [72, 72 + 119, window.innerHeight * 0.8]
 export default () => {
     const [focus, setFocus] = useState(false)
     const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
+        id: 'd07532df77f9d9a5',
         googleMapsApiKey: 'AIzaSyBxhljI-42-8Sn2UOAVf3Cw_9lH4otQ6vY',
         libraries: ['geometry', 'drawing'],
     });
     return (
-        <>
+        <div>
             {isLoaded &&<GoogleMap
                     mapContainerStyle={containerStyle}
                     center={center}
@@ -118,6 +118,6 @@ export default () => {
                     ))}
                 </List>
             </FloatingPanel>
-        </>
+        </div>
     )
 }

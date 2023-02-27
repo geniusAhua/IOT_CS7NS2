@@ -40,7 +40,7 @@ export default function BasicDemo() {
                 onClick={() => {
                     setVisible(true)
                 }}
-                style={{marginLeft:"34vw",marginTop:"1vh"}}
+                style={{marginLeft:"34vw",marginTop:"1vh",borderRadius:"50px"}}
             >
                 choose
             </Button>
