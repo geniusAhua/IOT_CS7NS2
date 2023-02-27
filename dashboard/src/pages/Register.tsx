@@ -38,7 +38,16 @@ export default function Register(){
         if (form.password !== '' && form.name !== '') {
             setCookie('username', form.name, 1);
             setCookie('password', form.password, 1);
-            navigate('../login')
+            // let params={
+            //     name:value
+            // }
+            // RegisterApi({params}).then(res=>{
+            //    let newArray = JSON.parse(JSON.stringify(res))
+            //     console.log(newArray)
+            // }).catch(function(err){
+            //     console.log(err)
+            // })
+            navigate('../')
         } else {
             alert("userName and password cannot be none")
         }

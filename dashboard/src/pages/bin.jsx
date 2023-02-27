@@ -49,10 +49,19 @@ const onRender = (scene) => {
     }
 };
 
+// BinDataApi({params}).then(res=>{
+    //     let info = JSON.parse(JSON.stringify(res))
+    //        console.log(info)
+    // }).catch(function(err){
+    //     console.log(err)
+    // })
+
 export default function Bin() {
     return (
         <div style={{width:"100%",height:"0%"}}>
-            <SceneComponent antialias onSceneReady={onSceneReady} onRender={onRender} id="my-canvas" style={{width:"100%",height:"30vh",marginTop:"5vh"}}/>
+            <SceneComponent antialias onSceneReady={onSceneReady} onRender={onRender} id="my-canvas" style={{width:"100%",height:"60vh",marginTop:"5vh"}}/>
+            <h3 style={{position:"relative",left:"20%",marginTop:"-10vh"}}>Weight:</h3>
+            <h3 style={{position:"relative",left:"20%"}}>Height:</h3>
         </div>
     )
 }

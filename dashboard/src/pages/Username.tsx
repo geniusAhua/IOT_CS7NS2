@@ -31,11 +31,19 @@ export default function Username() {
     const removeCookie = name => {
         setCookie(name, 1, -1);
     };
-
+   
+    localStorage.setItem('count',1)
+    
     const submit=()=> {
-        if (form.password !== '' && form.name !== '') {
+        if (form.password !== (''||undefined) && form.name !== (''||undefined)) {
             setCookie('username', form.name, 1);
             setCookie('password', form.password, 1);
+            // LoginApi({params}).then(res=> {
+            //  let newArr = JSON.parse(JSON.stringify(res))
+            //  console.log(newArr)
+            // }).catch(function (error) {
+            //     console.log(error);
+            // })
             navigate('../home/googleMap')
             window.location.reload()
         } else {
@@ -43,7 +51,7 @@ export default function Username() {
         }
     }
     
-    localStorage.setItem(open,false)
+
     return (
         <div style={{
             width: "90%",
@@ -58,7 +66,7 @@ export default function Username() {
             <BasicDemo/>
             <Form requiredMarkStyle='asterisk' style={{width: "90%", position: "relative", left: "5%", top: "5%"}}>
                 <Form.Item name='name' label='username' rules={[{required: true}]} style={{height: "10vh"}}>
-                    <Input style={{fontSize: "16px"}} placeholder='please input your name' value={form.name}
+                    <Input style={{fontSize: "16px"}} placeholder={document.cookie.username?document.cookie.username:'please inout your name'} value={form.name}
                            onChange={(val) => handleChange(val,'name')}/>
                 </Form.Item>
                 <Form.Item name='address' label='password' rules={[{required: true}]} style={{height: "50%"}}>

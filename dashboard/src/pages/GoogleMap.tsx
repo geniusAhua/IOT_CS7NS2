@@ -14,8 +14,7 @@ import Open_bin from "../bin/open_bin.jpg";
 // @ts-ignore
 import styles from '../less/google.less'
 import Footer from "../components/footer";
-import { GoogleMap, LoadScript, useJsApiLoader } from '@react-google-maps/api';
-
+import { GoogleMap, LoadScript, useJsApiLoader,MarkerF } from '@react-google-maps/api';
 
 const containerStyle = {
     width: screen.width,
@@ -23,8 +22,8 @@ const containerStyle = {
 };
 
 const center = {
-    lat: -3.745,
-    lng: -38.523
+    lat: 53.49332,
+    lng: -6.31718
 };
 const mapId:string = 'd07532df77f9d9a5'
 const options = {
@@ -73,6 +72,27 @@ export default () => {
         googleMapsApiKey: 'AIzaSyBxhljI-42-8Sn2UOAVf3Cw_9lH4otQ6vY',
         libraries: ['geometry', 'drawing'],
     });
+
+    const [markers,setMarkers] =useState({
+        marker1: {
+            lat: 53.49332,
+            lng: -6.31718
+        },
+        marker2: {
+            lat: 54.49332,
+            lng: -6.31718
+        }
+    })
+
+    // BinDataApi({params}).then(res=>{
+    //     let positions = JSON.parse(JSON.stringify(res))
+    //     const markers = [...positions]
+    //     markers.push(position)
+    //     setMarkers({ markers })
+    // }).catch(function(err){
+    //     console.log(err)
+    // })
+
     return (
         <div>
             {isLoaded &&<GoogleMap
@@ -81,6 +101,12 @@ export default () => {
                     zoom={10}
                     options={options}
                >
+                {  Object.values(markers).map((index,position)=>
+                    <MarkerF
+                        position={index} key={position}
+                    />
+                )
+                }
             </GoogleMap>
             }
             <FloatingPanel anchors={anchors}>

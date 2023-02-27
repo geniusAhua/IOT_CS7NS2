@@ -9,10 +9,14 @@ const symbols = []
 
 export default function Login(){
     const [open, set] = useState(true)
-
+    let flag = true
+    
+    if(localStorage.getItem('count')==1){
+        flag = false
+    }
     return(
         <div>
-            {open === false?
+            {open === false || flag == false?
                 <Background
                     underlayImage='linear-gradient(to right, #fffff0 0%,#a9a9a9 100%)'
                     symbolsStyle={{color:'rgba(45,45,45,0.8)'}}
