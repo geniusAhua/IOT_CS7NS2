@@ -76,32 +76,26 @@ export default () => {
         googleMapsApiKey: 'AIzaSyBxhljI-42-8Sn2UOAVf3Cw_9lH4otQ6vY',
         libraries: ['geometry', 'drawing'],
     });
-
+    
     const [markers,setMarkers] =useState({
         marker1: {
-            lat: 54,
-            lng: -6
-        },
-        marker2: {
-            lat: 54.49332,
+            lat: 53.49332,
             lng: -6.31718
         },
-        marker3: {
+        marker2: {
             lat: 54.49332,
             lng: -6.31718
         }
     })
 
-
     let params={userId:1}
     const api =()=> {
-        let positions: { lat: number, lng: number }
         BinDataApi({params}).then(res => {
-            positions = {
-                'lat': parseFloat(JSON.parse(JSON.stringify(res)).longitude),
-                'lng': parseFloat(JSON.parse(JSON.stringify(res)).latitude)
+           let positions = {
+                lat: parseFloat(JSON.parse(JSON.stringify(res)).longitude),
+                lng: parseFloat(JSON.parse(JSON.stringify(res)).latitude)
             }
-            markers['marker3'] = positions
+            markers['marker1'] = positions
             setMarkers(markers)
             console.log(markers)
         }).catch(function (err) {
@@ -109,8 +103,17 @@ export default () => {
         })
     }
     api()
-
-    return (
+    const [showComponent, setShowComponent] = useState(false);
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setShowComponent(true);
+        }, 3000);
+        return () => {
+            clearTimeout(timeoutId);
+        };
+    }, []);
+    
+        return (
         <div>
             {isLoaded &&<GoogleMap
                 mapContainerStyle={containerStyle}
@@ -118,9 +121,9 @@ export default () => {
                 zoom={10}
                 options={options}
             >
-                {  Object.values(markers).map((index,position)=>
+                { showComponent &&Object.values(markers).map((index,position)=>
                     <MarkerF
-                        position={markers.marker3} key={position}
+                        position={index} key={position}
                     />
                 )
                 }
