@@ -76,35 +76,39 @@ export default () => {
         googleMapsApiKey: 'AIzaSyBxhljI-42-8Sn2UOAVf3Cw_9lH4otQ6vY',
         libraries: ['geometry', 'drawing'],
     });
-    
-    let params={userId:1}
-    
+
     const [markers,setMarkers] =useState({
         marker1: {
-            lat: 53,
-            lng: -6
-        },
-        marker3: {
             lat: 54,
             lng: -6
+        },
+        marker2: {
+            lat: 54.49332,
+            lng: -6.31718
+        },
+        marker3: {
+            lat: 54.49332,
+            lng: -6.31718
         }
     })
 
-    useEffect(()=>{
+
+    let params={userId:1}
     const api =()=> {
-        let positions:{ lat: number, lng: number }
+        let positions: { lat: number, lng: number }
         BinDataApi({params}).then(res => {
             positions = {
-                'lat': 53.49332,
-                'lng': -6.31718
+                'lat': parseFloat(JSON.parse(JSON.stringify(res)).longitude),
+                'lng': parseFloat(JSON.parse(JSON.stringify(res)).latitude)
             }
             markers['marker3'] = positions
+            setMarkers(markers)
+            console.log(markers)
         }).catch(function (err) {
             console.log(err)
         })
-        setMarkers(markers) 
-        console.log(markers)
-    }},[markers])
+    }
+    api()
 
     return (
         <div>
