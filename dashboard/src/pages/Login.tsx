@@ -5,12 +5,13 @@ import React, { useState } from 'react'
 import SVG from "./svg_container";
 import Username from "./Username";
 import Background from 'smart-background';
-const symbols = []
 
+const symbols: number[] =  []
 export default function Login(){
     const [open, set] = useState(true)
     let flag = true
-    
+
+    // @ts-ignore
     if(localStorage.getItem('count')==1){
         flag = false
     }

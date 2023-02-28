@@ -3,21 +3,24 @@ import BasicDemo from "../components/image";
 import {Button, NumberKeyboard, PasscodeInput, VirtualInput} from "antd-mobile";
 import {useNavigate, Link} from "react-router-dom";
 import {Form, Input} from 'antd-mobile'
+import { LoginApi } from '../request/api';
+import axios from 'axios';
 
 export default function Username() {
     const navigate = useNavigate()
     const [form, setForm] = useState({name:'',password:''})
-    const handleChange = useCallback((val, name) => {
+    const handleChange = useCallback((val:any, name:any) => {
         setForm(preVal => ({ ...preVal, [name]: val }))
     }, [])
     
-    const setCookie = (name, value, expiryDate) => {
+    console.log(form)
+    const setCookie = (name:any, value:any, expiryDate:any) => {
         let currentDate = new Date();
         currentDate.setDate(currentDate.getDate() + expiryDate);
         document.cookie = name + '=' + value + '; expires=' + currentDate ;
     };
 
-    const getCookie = name => {
+    const getCookie = (name:any) => {
         let arr = document.cookie.split('; ');
         for (let i = 0; i < arr.length; i++) {
             let arr2 = arr[i].split('=');
@@ -28,29 +31,35 @@ export default function Username() {
         return '';
     };
 
-    const removeCookie = name => {
+    const removeCookie = (name: any) => {
         setCookie(name, 1, -1);
     };
    
+    // @ts-ignore
     localStorage.setItem('count',1)
     
     const submit=()=> {
         if (form.password !== (''||undefined) && form.name !== (''||undefined)) {
             setCookie('username', form.name, 1);
             setCookie('password', form.password, 1);
-            // LoginApi({params}).then(res=> {
-            //  let newArr = JSON.parse(JSON.stringify(res))
-            //  console.log(newArr)
-            // }).catch(function (error) {
-            //     console.log(error);
-            // })
-            navigate('../home/googleMap')
-            window.location.reload()
+            axios({
+                method: 'post',
+                url: '/api/user/account/login',
+                data: {
+                    username:form.name,
+                    password:form.password
+                }
+            })
+                .then(function (response) {
+                    if(response.data.error_message == 'success'){
+                        navigate('../home/googleMap')
+                        window.location.reload()
+                    }
+                });
         } else {
             alert("userName and password cannot be none")
         }
     }
-    
 
     return (
         <div style={{
@@ -66,7 +75,7 @@ export default function Username() {
             <BasicDemo/>
             <Form requiredMarkStyle='asterisk' style={{width: "90%", position: "relative", left: "5%", top: "5%"}}>
                 <Form.Item name='name' label='username' rules={[{required: true}]} style={{height: "10vh"}}>
-                    <Input style={{fontSize: "16px"}} placeholder={document.cookie.username?document.cookie.username:'please inout your name'} value={form.name}
+                    <Input style={{fontSize: "16px"}} placeholder='please inout your name' value={form.name}
                            onChange={(val) => handleChange(val,'name')}/>
                 </Form.Item>
                 <Form.Item name='address' label='password' rules={[{required: true}]} style={{height: "50%"}}>

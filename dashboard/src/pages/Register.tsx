@@ -4,22 +4,25 @@ import {Button, NumberKeyboard, PasscodeInput, VirtualInput} from "antd-mobile";
 import {useNavigate, Link} from "react-router-dom";
 import {Form, Input} from 'antd-mobile'
 import Background from 'smart-background';
+import { RegisterApi } from '../request/api';
+import axios from 'axios';
 
 export default function Register(){
-    const symbols = []
+    const symbols:number[] = []
     const navigate = useNavigate()
-    const [form, setForm] = useState({name:'',password:''})
-    const handleChange = useCallback((val, name) => {
+    const [form, setForm] = useState({name:'',password:'',confirmPassword:''})
+    const handleChange = useCallback((val:any, name:any) => {
         setForm(preVal => ({ ...preVal, [name]: val }))
     }, [])
 
-    const setCookie = (name, value, expiryDate) => {
+    const setCookie = (name:any, value:any, expiryDate:any) => {
         let currentDate = new Date();
         currentDate.setDate(currentDate.getDate() + expiryDate);
         document.cookie = name + '=' + value + '; expires=' + currentDate ;
     };
+    
 
-    const getCookie = name => {
+    const getCookie = (name:any) => {
         let arr = document.cookie.split('; ');
         for (let i = 0; i < arr.length; i++) {
             let arr2 = arr[i].split('=');
@@ -30,7 +33,7 @@ export default function Register(){
         return '';
     };
 
-    const removeCookie = name => {
+    const removeCookie = (name:any) => {
         setCookie(name, 1, -1);
     };
 
@@ -38,16 +41,23 @@ export default function Register(){
         if (form.password !== '' && form.name !== '') {
             setCookie('username', form.name, 1);
             setCookie('password', form.password, 1);
-            // let params={
-            //     name:value
-            // }
-            // RegisterApi({params}).then(res=>{
-            //    let newArray = JSON.parse(JSON.stringify(res))
-            //     console.log(newArray)
-            // }).catch(function(err){
-            //     console.log(err)
-            // })
-            navigate('../')
+            setCookie('confirmPassword', form.confirmPassword, 1);
+  
+            axios({
+                method: 'post',
+                url: '/api/user/account/register',
+                data: {
+                    username:form.name,
+                    password:form.password,
+                    confirmPassword:form.confirmPassword
+                }
+            })
+                .then(function (response) {
+                    if(response.data.error_message == 'success'){
+                        navigate('../')
+                    }
+                });
+            
         } else {
             alert("userName and password cannot be none")
         }
@@ -82,6 +92,10 @@ export default function Register(){
                 <Form.Item name='address' label='password' rules={[{required: true}]} style={{height: "50%"}}>
                     <PasscodeInput keyboard={<NumberKeyboard/>} value={form.password}
                                    onChange={(val) => (val.length==6)&&handleChange(val,'password')}/>
+                </Form.Item>
+                <Form.Item name='password' label='confirmPassword' rules={[{required: true}]} style={{height: "50%"}}>
+                    <PasscodeInput keyboard={<NumberKeyboard/>} value={form.confirmPassword}
+                                   onChange={(val) => (val.length==6)&&handleChange(val,'confirmPassword')}/>
                 </Form.Item>
             </Form>
             <Button style={{

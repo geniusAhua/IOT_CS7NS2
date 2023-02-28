@@ -3,7 +3,7 @@ import axios from 'axios'
 // 配置项
 const axiosOption = {
     baseURL: '/api',
-    timeout: 10000
+    timeout: 1000
 }
 
 // 创建一个单例

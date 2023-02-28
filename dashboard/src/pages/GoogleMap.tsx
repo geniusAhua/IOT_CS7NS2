@@ -15,6 +15,10 @@ import Open_bin from "../bin/open_bin.jpg";
 import styles from '../less/google.less'
 import Footer from "../components/footer";
 import { GoogleMap, LoadScript, useJsApiLoader,MarkerF } from '@react-google-maps/api';
+import { BinDataApi } from '../request/api';
+
+
+
 
 const containerStyle = {
     width: screen.width,
@@ -72,38 +76,47 @@ export default () => {
         googleMapsApiKey: 'AIzaSyBxhljI-42-8Sn2UOAVf3Cw_9lH4otQ6vY',
         libraries: ['geometry', 'drawing'],
     });
-
+    
+    let params={userId:1}
+    
     const [markers,setMarkers] =useState({
         marker1: {
-            lat: 53.49332,
-            lng: -6.31718
+            lat: 53,
+            lng: -6
         },
-        marker2: {
-            lat: 54.49332,
-            lng: -6.31718
+        marker3: {
+            lat: 54,
+            lng: -6
         }
     })
 
-    // BinDataApi({params}).then(res=>{
-    //     let positions = JSON.parse(JSON.stringify(res))
-    //     const markers = [...positions]
-    //     markers.push(position)
-    //     setMarkers({ markers })
-    // }).catch(function(err){
-    //     console.log(err)
-    // })
+    useEffect(()=>{
+    const api =()=> {
+        let positions:{ lat: number, lng: number }
+        BinDataApi({params}).then(res => {
+            positions = {
+                'lat': 53.49332,
+                'lng': -6.31718
+            }
+            markers['marker3'] = positions
+        }).catch(function (err) {
+            console.log(err)
+        })
+        setMarkers(markers) 
+        console.log(markers)
+    }},[markers])
 
     return (
         <div>
             {isLoaded &&<GoogleMap
-                    mapContainerStyle={containerStyle}
-                    center={center}
-                    zoom={10}
-                    options={options}
-               >
+                mapContainerStyle={containerStyle}
+                center={center}
+                zoom={10}
+                options={options}
+            >
                 {  Object.values(markers).map((index,position)=>
                     <MarkerF
-                        position={index} key={position}
+                        position={markers.marker3} key={position}
                     />
                 )
                 }
