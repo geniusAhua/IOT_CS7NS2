@@ -3,6 +3,7 @@ package com.iot.smartbin.mqtt.model;
 import com.amazonaws.services.iot.client.AWSIotMessage;
 import com.amazonaws.services.iot.client.AWSIotQos;
 import com.amazonaws.services.iot.client.AWSIotTopic;
+import com.iot.smartbin.websocket.websocket;
 
 /**
  * @author Siuyun Yip
@@ -17,6 +18,8 @@ public class TrashHeightTopic extends AWSIotTopic {
     @Override
     public void onMessage(AWSIotMessage message) {
         // TODO Forward message to frontend via WebSocket
+        websocket.sendMessage(message.getStringPayload());
         System.out.println("Message received");
+
     }
 }

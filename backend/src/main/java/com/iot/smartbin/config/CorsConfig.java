@@ -13,7 +13,6 @@ public class CorsConfig implements Filter {
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         HttpServletResponse response = (HttpServletResponse) res;
         HttpServletRequest request = (HttpServletRequest) req;
-
         String origin = request.getHeader("Origin");
         if(origin!=null) {
             response.setHeader("Access-Control-Allow-Origin", origin);
