@@ -5,3 +5,5 @@ dashboard/node_modules
 **/.vscode
 **/**.DS_Store
 **/cert
+**/managed_components
+**/demo
