@@ -8,10 +8,12 @@
 #include "driver/uart.h"
 #include "my_log.h"
 
-class GPS{
-    private:
-    typedef struct{
-        uint8_t* data;
+class GPS
+{
+private:
+    typedef struct
+    {
+        uint8_t *data;
         SemaphoreHandle_t mutex_data;
     } GPS_task_t;
     int gpio_rx;
@@ -23,12 +25,11 @@ class GPS{
     static uint32_t interval;
     static const uart_config_t uart_config;
 
-    public:
+public:
     GPS(int gpio_rx = UART_PIN_NO_CHANGE, int gpio_tx = UART_PIN_NO_CHANGE);
     std::string get_location();
 
     static void task_GPS(void *_data);
-};//GPS
-
+}; // GPS
 
 #endif

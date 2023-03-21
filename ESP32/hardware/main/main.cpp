@@ -5,9 +5,9 @@
 #include "my_wifi.h"
 #include "my_log.h"
 #include "my_event_loop.h"
-#include "my_sensors.h"
+// #include "my_sensors.h"
 
-//ESP32 GPIO12 can not be set to high
+// ESP32 GPIO12 can not be set to high
 #define TXD_PIN (GPIO_NUM_21)
 #define RXD_PIN (GPIO_NUM_19)
 
@@ -16,7 +16,7 @@ using namespace std;
 MyLog demoLog(LOG_TAG_MAIN);
 GPS *sensorGPS;
 int num = 0;
- /**
+/**
  * typedef enum {
  *    ESP_LOG_NONE,       !< No log output
  *    ESP_LOG_ERROR,      !< Critical errors, software module can not recover on its own
@@ -25,7 +25,7 @@ int num = 0;
  *    ESP_LOG_DEBUG,      !< Extra information which is not necessary for normal use (values, pointers, sizes, etc).
  *    ESP_LOG_VERBOSE     !< Bigger chunks of debugging information, or frequent messages which can potentially flood the output.
  * } esp_log_level_t;
-**/
+ **/
 /**
  * 串口通信
  * 1. 设置通信参数 - 设置波特率，数据位，停止位等
@@ -34,7 +34,7 @@ int num = 0;
  * 4. 运行UART通信 - 发送/接受数据
  * 5. 使用中断 - 在特定的通信事件中触发中断
  * 6. 删除驱动程序 - 如果不再需要UART通信，释放分配的资源
-*/
+ */
 
 /*
 task_list()
@@ -43,10 +43,11 @@ task_list()
 Enable FreeRTOS trace facility
 Enable FreeRTOS stats formatting functions
 */
-void set_up(){
+void set_up()
+{
     demoLog.logI("Create a FreeRTOS Event Group and Initialize the customized EventLoop.");
     MyEventLoop::init();
-    
+
     demoLog.logI("Start Init!");
 
     esp_log_level_set(LOG_TAG_MAIN, ESP_LOG_DEBUG);
@@ -55,7 +56,6 @@ void set_up(){
     gpio_reset_pin(PIN_BUTTON1);
     gpio_set_direction(PIN_BUTTON1, PIN_BUTTON1_MOD);
 }
-
 
 extern "C" void app_main(void)
 {
