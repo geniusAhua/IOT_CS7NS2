@@ -19,6 +19,9 @@ public class websocketServer {
 
     @OnOpen
     public void onOpen(Session session){
+        MqttPubSubService mqttPubSubService = new MqttPubSubService();
+        //TODO get topicName
+        mqttPubSubService.subscribeMessage("topicName");
         this.session = session;
         webSocketSet.add(this);
         onlineCount++;
