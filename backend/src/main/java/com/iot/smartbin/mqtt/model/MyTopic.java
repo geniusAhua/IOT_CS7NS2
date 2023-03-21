@@ -3,7 +3,9 @@ package com.iot.smartbin.mqtt.model;
 import com.amazonaws.services.iot.client.AWSIotMessage;
 import com.amazonaws.services.iot.client.AWSIotQos;
 import com.amazonaws.services.iot.client.AWSIotTopic;
-import com.iot.smartbin.websocket.websocket;
+import com.iot.smartbin.websocket.websocketServer;
+
+import java.io.IOException;
 
 /**
  * @author Siuyun Yip
@@ -18,7 +20,12 @@ public class MyTopic extends AWSIotTopic {
     @Override
     public void onMessage(AWSIotMessage message) {
         // called when a message is received
-        websocket.sendMessage(message.getStringPayload());
-        System.out.println("Message received");
+        websocketServer server = new websocketServer();
+        try {
+            server.sendMessage(message.getStringPayload());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Message is sent to frontend");
     }
 }

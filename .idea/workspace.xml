@@ -1,65 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3778b194-39ec-4f9e-9282-452049d11c3a" name="Changes" comment="front-end">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/.idea/react-mobile.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/config-overrides.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/package-lock.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/public/favicon.ico" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/public/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/public/logo192.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/public/logo512.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/public/manifest.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/public/robots.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/App.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/App.test.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/App.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/bin/close_bin.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/bin/map.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/bin/open_bin.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/bin/press_bin.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/Example.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/Logo.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/MenuItem.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/MenuToggle.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/Navigation.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/Scroll.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/avatar.less" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/demos-util.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/image.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/scroll.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/components/use-dimensions.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/index.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/index.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/less/Login.less" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/less/bin.less" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/less/google.less" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/less/homepage.less" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/less/map.less" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/logo.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/GoogleMap.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/HomePage.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/Login.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/Register.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/SceneComponent.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/bin.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/login.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/pages/map.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/react-app-env.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/reportWebVitals.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/router/index.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/setupTests.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/store/index.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/src/store/reducer.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dashboard/tsconfig.json" afterDir="false" />
-    </list>
+    <list default="true" id="3778b194-39ec-4f9e-9282-452049d11c3a" name="Changes" comment="front-end" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -163,6 +105,7 @@
       <workItem from="1676729438911" duration="14144000" />
       <workItem from="1676986448413" duration="2114000" />
       <workItem from="1676989621098" duration="957000" />
+      <workItem from="1679414728639" duration="56000" />
     </task>
     <task id="LOCAL-00001" summary="front-end">
       <created>1676988848624</created>
