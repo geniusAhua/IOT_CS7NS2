@@ -1,9 +1,9 @@
 #include "my_event_loop.h"
 #include "my_const.h"
-#include "my_log.h"
 
 //protperties of MyEventLoop
 bool MyEventLoop::isInit = false;
+MyLog MyEventLoop::eventLoopLog(LOG_TAG_EVENT_LOOP);
 esp_event_base_t MyEventLoop::SMARTBIN_BASE = SMARTBIN_EVENT_BASE;
 // typedef struct {
 //     int32_t queue_size;                         /**< size of the event loop queue */
@@ -22,22 +22,36 @@ esp_event_loop_args_t MyEventLoop::smartBin_loop_args = {
     .task_core_id = tskNO_AFFINITY,
 };
 
-//variable
-MyLog eventLoopLog(LOG_TAG_EVENT_LOOP);
-
 
 void MyEventLoop::init(){
-    eventLoopLog.logD("Create an Event Loop for SmartBin.");
-    ESP_ERROR_CHECK(esp_event_loop_create(&smartBin_loop_args, &smartBin_loop_handler));
-    vTaskDelete(NULL);
+    if(!MyEventLoop::isInit){
+        MyEventLoop::isInit = true;
+        MyEventLoop::_s_wifi_event_group = xEventGroupCreate();
+        eventLoopLog.logI("Create an Event Loop for SmartBin.");
+        ESP_ERROR_CHECK(esp_event_loop_create(&smartBin_loop_args, &smartBin_loop_handler));
+    }
 }//MyEventLoop::init()
 
 void MyEventLoop::post_event_to(smartBin_event_t eventId, const void *eventData, size_t eventDataSize, TickType_t ticksToWait){
-    ESP_ERROR_CHECK(esp_event_post_to(MyEventLoop::smartBin_loop_handler, MyEventLoop::SMARTBIN_BASE, static_cast<int32_t>(eventId), eventData, eventDataSize, ticksToWait));
+    if(MyEventLoop::isInit){
+        ESP_ERROR_CHECK(esp_event_post_to(MyEventLoop::smartBin_loop_handler, MyEventLoop::SMARTBIN_BASE, static_cast<int32_t>(eventId), eventData, eventDataSize, ticksToWait));
+    }
+    else{
+        MyEventLoop::eventLoopLog.logE("Please Initialize MyEventLoop first");
+    }
 }
 
 void MyEventLoop::smartBin_handler_register(smartBin_event_t eventId, esp_event_handler_t eventHandler, void *eventHandlerArgs){
-    ESP_ERROR_CHECK(esp_event_handler_register_with(MyEventLoop::smartBin_loop_handler, MyEventLoop::SMARTBIN_BASE, static_cast<int32_t>(eventId), eventHandler, eventHandlerArgs));
+    if(MyEventLoop::isInit){
+        ESP_ERROR_CHECK(esp_event_handler_register_with(MyEventLoop::smartBin_loop_handler, MyEventLoop::SMARTBIN_BASE, static_cast<int32_t>(eventId), eventHandler, eventHandlerArgs));
+    }
+    else{
+        MyEventLoop::eventLoopLog.logE("Please Initialize MyEventLoop first");
+    }
+}
+
+const EventGroupHandle_t MyEventLoop::s_wifi_event_group(){
+    return MyEventLoop::_s_wifi_event_group;
 }
 
 MyEventLoop::~MyEventLoop(){

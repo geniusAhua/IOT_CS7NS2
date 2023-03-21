@@ -4,6 +4,8 @@
 #include <vector>
 #include <stdio.h>
 #include "esp_event.h"
+#include "my_log.h"
+#include "my_const.h"
 
 // typedef enum{
 //     WIFI_CONFIG_DONE = 0,
@@ -22,11 +24,14 @@ class MyEventLoop{
     static esp_event_loop_args_t smartBin_loop_args;
     static esp_event_base_t SMARTBIN_BASE;
     static std::vector<smartBin_event_t> eventIdGroup;
+    static EventGroupHandle_t _s_wifi_event_group;
+    static MyLog eventLoopLog;
 
     public:
     static void init();
     static void smartBin_handler_register(smartBin_event_t eventId, esp_event_handler_t eventHandler, void *eventHandlerArgs);
     static void post_event_to(smartBin_event_t eventId, const void *eventData, size_t eventDataSize, TickType_t ticksToWait);
+    static const EventGroupHandle_t s_wifi_event_group();
     ~MyEventLoop();
 };//MyEventLoop
 

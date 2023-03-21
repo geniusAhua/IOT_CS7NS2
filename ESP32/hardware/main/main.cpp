@@ -1,7 +1,4 @@
 #include <stdio.h>
-// #include "freertos/FreeRTOS.h"
-// #include "freertos/task.h"
-// #include "freertos/event_groups.h"
 #include "driver/gpio.h"
 #include "driver/uart.h"
 #include "my_const.h"
@@ -19,7 +16,6 @@ using namespace std;
 MyLog demoLog(LOG_TAG_MAIN);
 GPS *sensorGPS;
 int num = 0;
-extern EventGroupHandle_t s_wifi_event_group = xEventGroupCreate();
  /**
  * typedef enum {
  *    ESP_LOG_NONE,       !< No log output
@@ -48,7 +44,8 @@ Enable FreeRTOS trace facility
 Enable FreeRTOS stats formatting functions
 */
 void set_up(){
-    demoLog.logI("Create a FreeRTOS Event Group");
+    demoLog.logI("Create a FreeRTOS Event Group and Initialize the customized EventLoop.");
+    MyEventLoop::init();
     
     demoLog.logI("Start Init!");
 
@@ -62,14 +59,14 @@ void set_up(){
 
 extern "C" void app_main(void)
 {
-    set_up();
+    // set_up();
 
-    sensorGPS = new GPS(PIN_GPS_RX, PIN_GPS_TX);
-    // _data = (uint8_t*) malloc(RX_BUF_SIZE+1);
-    // init_uart2();
-    // xTaskCreate(rx2_task, "GPS_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL);
-    while(1){
-        demoLog.logI("GPS data: %s", sensorGPS->get_location().data());
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-    }
+    demoLog.logI("Notification :%s", configUSE_TASK_NOTIFICATIONS ? "TRUE" : "FALSE");
+    demoLog.logI("Num of it: %d", configTASK_NOTIFICATION_ARRAY_ENTRIES);
+
+    // sensorGPS = new GPS(PIN_GPS_RX, PIN_GPS_TX);
+    // while(1){
+    //     demoLog.logI("GPS data: %s", sensorGPS->get_location().data());
+    //     vTaskDelay(2000 / portTICK_PERIOD_MS);
+    // }
 }
