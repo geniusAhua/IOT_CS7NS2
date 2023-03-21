@@ -1,6 +1,10 @@
 #include "my_sensors.h"
 #include "my_const.h"
 
+/**
+ * @class GPS
+ * @note this a sensor class for GPS, just remember GPIO_rx pin need to connect to the tx pin on GPS sensors.
+*/
 const uart_config_t GPS::uart_config = {
         .baud_rate = 9600,
         .data_bits = UART_DATA_8_BITS,
@@ -54,3 +58,5 @@ std::string GPS::get_location(){
     }
     return position;
 }
+
+//*****************************************GPS*****************************************//
