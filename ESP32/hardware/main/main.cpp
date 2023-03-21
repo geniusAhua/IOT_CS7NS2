@@ -5,7 +5,7 @@
 #include "my_wifi.h"
 #include "my_log.h"
 #include "my_event_loop.h"
-// #include "my_sensors.h"
+#include "my_sensors.h"
 
 // ESP32 GPIO12 can not be set to high
 #define TXD_PIN (GPIO_NUM_21)

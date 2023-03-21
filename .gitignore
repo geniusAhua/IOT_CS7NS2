@@ -7,5 +7,6 @@ dashboard/node_modules
 **/cert
 **/managed_components
 **/demo
+**/tmp
 
 IOT_workspace
