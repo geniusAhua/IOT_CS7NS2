@@ -1,5 +1,5 @@
-#ifndef MY_LOG_H
-#define MY_LOG_H
+#ifndef __MY_LOG_H__
+#define __MY_LOG_H__
 
 #include <cstdarg>
 #include <string>

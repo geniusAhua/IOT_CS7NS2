@@ -1,14 +1,37 @@
-#ifndef MY_CONST_H
-#define MY_CONST_H
+#ifndef __MY_CONST_H__
+#define __MY_CONST_H__
 
-#define LOG_TAG_MAIN "forMain"
-#define LOG_TAG_WIFI "forWiFi"
-#define WIFI_SSID "一起爬山吗"
-#define WIFI_PWD "qwertyuiop"
-#define WIFI_MAX_RETRY_NUM 10
-#define TRASH_BIN_WIFI_MODE WIFI_MODE_STA
-#define PIN_BUTTON1 GPIO_NUM_12
-#define PIN_BUTTON1_MOD GPIO_MODE_OUTPUT
-#define OUTPUT_LEVEL ESP_LOG_VERBOSE
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/event_groups.h"
+
+#define LOG_TAG_MAIN                    "SmartBin-Main"
+#define LOG_TAG_WIFI                    "SmartBin-WiFi"
+#define LOG_TAG_EVENT_LOOP              "SmartBin-Event-Loop"
+#define LOG_TAG_SENSORS_GPS             "SmartBin-Sensors_GPS"
+
+#define WIFI_SSID                       "刘阿花的iPhone"
+#define WIFI_PWD                        "qwertyuiop"
+#define WIFI_MAX_RETRY_NUM              10
+
+#define SMARTBIN_EVENT_BASE             "SmartBin-Event"
+#define TRASH_BIN_WIFI_MODE             WIFI_MODE_STA
+
+#define TASK_NAME_WIFI_APP             "WIFI_APP_TASK"
+#define TASK_NAME_GPS                   "GPS_TASK"
+
+#define PIN_BUTTON1                     GPIO_NUM_12
+#define PIN_BUTTON1_MOD                 GPIO_MODE_OUTPUT
+#define PIN_GPS_TX                      GPIO_NUM_21
+#define PIN_GPS_RX                      GPIO_NUM_19
+#define OUTPUT_LEVEL                    ESP_LOG_VERBOSE
+
+
+
+//Variable for FreeRTOS system
+extern EventGroupHandle_t s_wifi_event_group;
+#define STA_START BIT0
+#define WIFI_DONE BIT1
+#define MQTT_     BIT2
 
 #endif

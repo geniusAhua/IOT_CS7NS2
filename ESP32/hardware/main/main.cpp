@@ -1,16 +1,25 @@
 #include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "my_log.h"
+// #include "freertos/FreeRTOS.h"
+// #include "freertos/task.h"
+// #include "freertos/event_groups.h"
 #include "driver/gpio.h"
+#include "driver/uart.h"
 #include "my_const.h"
 #include "my_wifi.h"
-#include "esp_log.h"
+#include "my_log.h"
+#include "my_event_loop.h"
+#include "my_sensors.h"
+
+//ESP32 GPIO12 can not be set to high
+#define TXD_PIN (GPIO_NUM_21)
+#define RXD_PIN (GPIO_NUM_19)
 
 using namespace std;
 
 MyLog demoLog(LOG_TAG_MAIN);
+GPS *sensorGPS;
 int num = 0;
+extern EventGroupHandle_t s_wifi_event_group = xEventGroupCreate();
  /**
  * typedef enum {
  *    ESP_LOG_NONE,       !< No log output
@@ -38,40 +47,29 @@ task_list()
 Enable FreeRTOS trace facility
 Enable FreeRTOS stats formatting functions
 */
-void task_list(void)
-{
-    char ptrTaskList[250];
-    vTaskList(ptrTaskList);
-    printf("*******************************************\n");
-    printf("Task            State   Prio    Stack    Num\n");
-    printf("*******************************************\n");
-    printf(ptrTaskList);
-    printf("*******************************************\n");
-}
-
 void set_up(){
-    esp_log_level_set(LOG_TAG_MAIN, ESP_LOG_DEBUG);
-    ESP_LOGD(LOG_TAG_MAIN, "for TEST!!!");
-    WiFi::connect();
+    demoLog.logI("Create a FreeRTOS Event Group");
+    
+    demoLog.logI("Start Init!");
 
-    // //显示当前的所有FreeRTOS任务
-    // task_list();
+    esp_log_level_set(LOG_TAG_MAIN, ESP_LOG_DEBUG);
+    WiFi::connect();
 
     gpio_reset_pin(PIN_BUTTON1);
     gpio_set_direction(PIN_BUTTON1, PIN_BUTTON1_MOD);
 }
 
+
 extern "C" void app_main(void)
 {
     set_up();
 
-    // while(1){
-    //     demoLog.logI("demo - count: %d", num);
-    //     num++;
-    //     //1s = 1000 / portTICK_PERIOD_MS
-    //     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    // }
-    // task_list();
-
-    vTaskDelete(NULL);
+    sensorGPS = new GPS(PIN_GPS_RX, PIN_GPS_TX);
+    // _data = (uint8_t*) malloc(RX_BUF_SIZE+1);
+    // init_uart2();
+    // xTaskCreate(rx2_task, "GPS_task", 1024 * 4, NULL, configMAX_PRIORITIES, NULL);
+    while(1){
+        demoLog.logI("GPS data: %s", sensorGPS->get_location().data());
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
 }

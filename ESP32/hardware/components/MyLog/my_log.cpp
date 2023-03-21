@@ -1,5 +1,5 @@
-#include "my_log.h"
 #include <cstring>
+#include "my_log.h"
 #include "my_const.h"
 
 using namespace std;

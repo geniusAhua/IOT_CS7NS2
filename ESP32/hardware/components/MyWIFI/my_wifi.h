@@ -1,5 +1,5 @@
-#ifndef MY_WIFI_H
-#define MY_WIFI_H
+#ifndef __MY_WIFI_H__
+#define __MY_WIFI_H__
 
 #include <string>
 #include "esp_wifi.h"

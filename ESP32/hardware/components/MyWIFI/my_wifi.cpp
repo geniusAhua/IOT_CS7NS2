@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <cstring>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/event_groups.h"
 #include "esp_wifi.h"
 #include "nvs_flash.h"
 #include "my_log.h"
 #include "my_wifi.h"
 #include "my_const.h"
-#include "freertos/event_groups.h"
-
-#define STA_START BIT0
+#include "my_event_loop.h"
 
 std::string WiFi::SSID = WIFI_SSID;
 std::string WiFi::PWD = WIFI_PWD;
@@ -25,12 +26,10 @@ static int s_retry_num = 0;
 // static const std::string tag_scan = "SCAN";
 static const std::string tag_conn = "CONN";
 static SemaphoreHandle_t s_semph_get_ip_addrs = NULL;
-static EventGroupHandle_t s_wifi_event_group;
 
 
 void WiFi::connect(){
     _connect();
-    vTaskDelete(NULL);
 }
 
 void WiFi::connect(const std::string ssid, const std::string pwd){
@@ -42,7 +41,6 @@ void WiFi::connect(const std::string ssid, const std::string pwd){
     setSSID(ssid);
     setPWD(pwd);
     _connect();
-    vTaskDelete(NULL);
 }
 
 void WiFi::_connect(){
@@ -56,9 +54,8 @@ void WiFi::_connect(){
         if (s_semph_get_ip_addrs == NULL) {
                 ESP_ERROR_CHECK(ESP_ERR_NO_MEM);
         }
-        wifiLog.logI("Create an App Task and FreeRTOS Event Group.");
-        s_wifi_event_group = xEventGroupCreate();
-        xTaskCreate(WiFi::app_task, "App Task", 1024 * 10, NULL, 1, NULL);
+        wifiLog.logI("Create an App Task.");
+        xTaskCreate(WiFi::app_task, TASK_NAME_WIFI_APP, 1024 * 10, NULL, 1, NULL);
         // initialize wifi_configuration and then start wifi
         WiFi::initWifiConnection();
     }
@@ -141,10 +138,11 @@ void WiFi::app_task(void *pt){
     wifiLog.logI("Waiting for IP(s)");
     
     //Waiting for an IP address
-    xSemaphoreTake(s_semph_get_ip_addrs, portMAX_DELAY);
-
-    if (s_retry_num > WIFI_MAX_RETRY_NUM) {
-        ESP_ERROR_CHECK(ESP_FAIL);
+    if(xSemaphoreTake(s_semph_get_ip_addrs, portMAX_DELAY) == pdTRUE){
+        wifiLog.logI("wifi component finished.");
+        if (s_retry_num > WIFI_MAX_RETRY_NUM) {
+            ESP_ERROR_CHECK(ESP_FAIL);
+        }
     }
     vTaskDelete(NULL);
 }
@@ -170,6 +168,7 @@ void WiFi::run_on_event(void* handler_arg, esp_event_base_t base, int32_t id, vo
             ip_event_got_ip_t* ip_config = (ip_event_got_ip_t *) event_data;
             switch(id){
                 case IP_EVENT_STA_GOT_IP:
+
                     wifiLog.logI("Got IP event, IP address:" IPSTR, IP2STR(&ip_config->ip_info.ip));
                     s_retry_num = 0;
                     if (s_semph_get_ip_addrs) {

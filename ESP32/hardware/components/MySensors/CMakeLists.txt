@@ -1,4 +1,4 @@
-idf_component_register(SRCS "my_wifi.cpp"
+idf_component_register(SRCS "my_sensors.cpp"
                        INCLUDE_DIRS "."
                        REQUIRES "MyLog" "MyConstant" "MyEventLoop"
-                       PRIV_REQUIRES esp_wifi nvs_flash)
+                       PRIV_REQUIRES driver)
