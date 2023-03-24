@@ -15,11 +15,7 @@ public class LoginController {
     private LoginService loginService;
 
     @PostMapping(("/api/user/account/login"))
-    public Map<String, String> login(@RequestBody Map<String, String> map){
-
-        String username = map.get("username");
-        String password = map.get("password");
-
+    public Map<String, String> login(@RequestParam String username, String password){
         return loginService.login(username, password);
     }
 }
