@@ -1,5 +1,6 @@
 package com.iot.smartbin.websocket;
 
+import com.iot.smartbin.mqtt.MqttPubSubService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
