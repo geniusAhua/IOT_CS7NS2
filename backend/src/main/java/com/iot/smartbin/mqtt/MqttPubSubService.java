@@ -1,8 +1,6 @@
 package com.iot.smartbin.mqtt;
 
-import com.amazonaws.services.iot.client.AWSIotException;
-import com.amazonaws.services.iot.client.AWSIotMqttClient;
-import com.amazonaws.services.iot.client.AWSIotQos;
+import com.amazonaws.services.iot.client.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iot.smartbin.config.MQTTConfig;
 import com.iot.smartbin.mqtt.model.PublishListener;
@@ -37,10 +35,8 @@ public class MqttPubSubService {
     }
 
     // subscribe a topic on aws iot platform
-    public void subscribeMessage(String topicName) {
+    public void subscribeMessage(AWSIotTopic topic) {
         AWSIotMqttClient client = mqttConfig.getClient();
-
-        MyTopic topic = new MyTopic(topicName, QOS0);
         try {
             client.subscribe(topic, TIMEOUT);
         } catch (AWSIotException e) {

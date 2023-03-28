@@ -1,7 +1,11 @@
 package com.iot.smartbin.websocket;
 
+import com.amazonaws.services.iot.client.AWSIotQos;
+import com.amazonaws.services.iot.client.AWSIotTopic;
 import com.iot.smartbin.mqtt.MqttPubSubService;
+import com.iot.smartbin.mqtt.model.TrashHeightTopic;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.*;
@@ -22,9 +26,12 @@ public class websocketServer {
     public void onOpen(Session session){
         MqttPubSubService mqttPubSubService = new MqttPubSubService();
         //TODO get topicName
-        mqttPubSubService.subscribeMessage("trash_height");
+        AWSIotTopic topic_height = new TrashHeightTopic("trash_height", AWSIotQos.QOS0, this);
+        mqttPubSubService.subscribeMessage(topic_height);
+
         log.info("trash_height");
-        mqttPubSubService.subscribeMessage("trash_humidity");
+        AWSIotTopic topic_humidity = new TrashHeightTopic("trash_humidity", AWSIotQos.QOS0, this);
+        mqttPubSubService.subscribeMessage(topic_humidity);
         log.info("trash_humidity");
         this.session = session;
         webSocketSet.add(this);
