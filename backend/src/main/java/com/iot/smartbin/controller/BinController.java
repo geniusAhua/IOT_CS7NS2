@@ -19,8 +19,8 @@ public class BinController {
     private MqttPubSubService mqttService;
 
     @GetMapping("/api/bin/info")
-    public Map<String, String> getBinDetails(@RequestParam Integer userId){
-        return binInfoService.binInfo(userId);
+    public Map<String, String> getBinDetails(@RequestParam Integer id){
+        return binInfoService.binInfo(id);
     }
 
 

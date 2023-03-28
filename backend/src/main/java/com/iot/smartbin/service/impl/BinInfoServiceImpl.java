@@ -18,10 +18,10 @@ public class BinInfoServiceImpl extends ServiceImpl<BinMapper, Bin> implements B
     private BinMapper binMapper;
 
     @Override
-    public Map<String, String> binInfo(Integer userId) {
+    public Map<String, String> binInfo(Integer id) {
         Map<String, String> map = new HashMap<>();
         QueryWrapper<Bin> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userId", userId);
+        queryWrapper.eq("id", id);
 
         List<Bin> bins = binMapper.selectList(queryWrapper);
         for(Bin bin : bins){

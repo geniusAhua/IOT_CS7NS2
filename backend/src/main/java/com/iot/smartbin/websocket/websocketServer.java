@@ -22,7 +22,10 @@ public class websocketServer {
     public void onOpen(Session session){
         MqttPubSubService mqttPubSubService = new MqttPubSubService();
         //TODO get topicName
-        mqttPubSubService.subscribeMessage("topicName");
+        mqttPubSubService.subscribeMessage("trash_height");
+        log.info("trash_height");
+        mqttPubSubService.subscribeMessage("trash_humidity");
+        log.info("trash_humidity");
         this.session = session;
         webSocketSet.add(this);
         onlineCount++;

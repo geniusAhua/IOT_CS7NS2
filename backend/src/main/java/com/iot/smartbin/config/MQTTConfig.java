@@ -2,6 +2,7 @@ package com.iot.smartbin.config;
 
 import com.amazonaws.services.iot.client.AWSIotException;
 import com.amazonaws.services.iot.client.AWSIotMqttClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * @date 2023/2/27 14:02
  */
 @Configuration
+@Slf4j
 public class MQTTConfig {
     @Value("${clientEndpoint}")
     private String clientEndpoint;
@@ -35,7 +37,7 @@ public class MQTTConfig {
                 e.printStackTrace();
             }
 
-            System.out.println("Connected!");
+            log.info("Connected!");
         }
 
         return client;

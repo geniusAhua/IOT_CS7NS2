@@ -19,10 +19,10 @@ public class TrashHeightTopic extends AWSIotTopic {
 
     @Override
     public void onMessage(AWSIotMessage message) {
-        // TODO Forward message to frontend via WebSocket
         websocketServer server = new websocketServer();
         try {
             server.sendMessage(message.getStringPayload());
+            System.out.println(message.getStringPayload());
         } catch (IOException e) {
             e.printStackTrace();
         }
