@@ -1,10 +1,7 @@
 package com.iot.smartbin.service;
 
-import com.iot.smartbin.pojo.Bin;
-
-import java.util.List;
+import java.util.Map;
 
 public interface BinInfoService {
-    List<Bin> getAllBinsInfo();
-    List<Bin> getBinInfoViaUserId(Integer userId);
+    Map<String, String> binInfo(Integer userId);
 }
