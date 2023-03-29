@@ -30,7 +30,6 @@ const name = ["bin open","bin close","need press"];
 type eventProps={
     params:number
 }
-// @ts-ignore
 
 let move= function():void {
     // @ts-ignore
@@ -46,6 +45,7 @@ export const MenuItem = ({ i }) => {
     const event = ({params}: eventProps) => (
         num = Number(Object.values(params)),
         dispatch(incrementByAmount(num)),
+
         setTimeout(()=> {
             // @ts-ignore
             document.getElementById('scroll').scrollLeft = 0

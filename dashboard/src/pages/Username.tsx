@@ -42,20 +42,20 @@ export default function Username() {
         if (form.password !== (''||undefined) && form.name !== (''||undefined)) {
             setCookie('username', form.name, 1);
             setCookie('password', form.password, 1);
-            axios({
-                method: 'post',
-                url: '/api/user/account/login',
-                data: {
-                    username:form.name,
-                    password:form.password
-                }
-            })
-                .then(function (response) {
-                    if(response.data.error_message == 'success'){
+            // axios({
+            //     method: 'post',
+            //     url: '/api/user/account/login',
+            //     data: {
+            //         username:form.name,
+            //         password:form.password
+            //     }
+            // })
+            //     .then(function (response) {
+                    // if(response.data.error_message == 'success'){
                         navigate('../home/googleMap')
                         window.location.reload()
-                    }
-                });
+                    // }
+                // });
         } else {
             alert("userName and password cannot be none")
         }

@@ -34,7 +34,7 @@ const onSceneReady = (scene) => {
     // Move the sphere upward 1/2 its height
     sphere.position.y = 2;
     cylinder.position.y = 1;
-    
+
 };
 
 /**
@@ -58,6 +58,18 @@ BinDataApi({params}).then(res=>{
     }).catch(function(err){
         console.log(err)
     })
+
+let ws = new WebSocket('ws://localhost:8080/websocket/client');
+// 在客户端与服务端建立连接后触发
+ws.onopen = function() {
+    console.log("Connection open.");
+    ws.send('hello');
+};
+// 在服务端给客户端发来消息的时候触发
+ws.onmessage = function(res) {
+    console.log(res);       // 打印的是MessageEvent对象
+    console.log(res.data);  // 打印的是收到的消息
+};
 
 export default function Bin() {
     return (
