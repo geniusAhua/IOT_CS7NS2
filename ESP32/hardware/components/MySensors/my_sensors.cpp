@@ -1,5 +1,6 @@
 #include "my_sensors.h"
 #include "my_const.h"
+#include "../lib/ultrasonic/ultrasonic.h"
 
 /**
  * @class GPS
@@ -65,4 +66,58 @@ std::string GPS::get_location()
         xSemaphoreGive(this->parameters.mutex_data);
     }
     return position;
+}
+
+// Ultrasonic implementation
+MyLog Ultrasonic::UltrasonicLog(LOG_TAG_SENSORS_GPS);
+
+Ultrasonic::Ultrasonic(gpio_num_t trigger, gpio_num_t echo) : parameters{.mutex_dist = xSemaphoreCreateMutex()}
+{
+    this->trigger = PIN_ULTRASONIC_TRIGGER;
+    this->echo = PIN_ULTRASONIC_ECHO;
+    sensor = {
+        .trigger_pin = trigger,
+        .echo_pin = echo
+    };
+    ultrasonic_init(&sensor);
+    xTaskCreate(&(Ultrasonic::task_Ultrasonic), TASK_NAME_ULTRASONIC, configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
+}
+
+void Ultrasonic::task_Ultrasonic(void *_parameters) 
+{
+    Ultrasonic_task_t *parameters = (Ultrasonic_task_t*)_parameters;
+    while(1) {
+        if (xSemaphoreTake((*parameters).mutex_dist, portMAX_DELAY) == pdTRUE) {
+            
+            esp_err_t res = ultrasonic_measure(&sensor, MAX_DISTANCE_CM, (*parameters).dist);
+            switch (res)
+            {
+                case ESP_ERR_ULTRASONIC_PING:
+                    Ultrasonic::UltrasonicLog.logI("Cannot ping (device is in invalid state)\n");
+                    break;
+                case ESP_ERR_ULTRASONIC_PING_TIMEOUT:
+                    Ultrasonic::UltrasonicLog.logI("Ping timeout (no device found)\n");
+                    break;
+                case ESP_ERR_ULTRASONIC_ECHO_TIMEOUT:
+                    Ultrasonic::UltrasonicLog.logI("Echo timeout (i.e. distance too big)\n");                    
+                    break;
+                default:
+                    Ultrasonic::UltrasonicLog.logI(esp_err_to_name(res));
+                    // printf("%s\n", esp_err_to_name(res));
+            }
+            xSemaphoreGive((*parameters).mutex_dist);
+        }
+    }
+}
+
+std::string Ultrasonic::get_distance()
+{
+    std::string dist = "";
+    if (xSemaphoreTake(this->parameters.mutex_dist, portMAX_DELAY) == pdTRUE)
+    {
+        dist = std::to_string((*this->parameters.dist));
+
+        xSemaphoreGive(this->parameters.mutex_dist);
+    }
+    return dist;
 }

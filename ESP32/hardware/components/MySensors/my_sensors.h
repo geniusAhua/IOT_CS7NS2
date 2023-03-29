@@ -32,4 +32,26 @@ public:
     static void task_GPS(void *_data);
 }; // GPS
 
+class Ultrasonic 
+{   
+private:
+    typedef struct
+    {
+        float *dist;
+        SemaphoreHandle_t mutex_dist;
+    } Ultrasonic_task_t;
+
+    gpio_num_t trigger;
+    gpio_num_t echo;
+    static MyLog UltrasonicLog;
+    Ultrasonic_task_t parameters;
+    static ultrasonic_sensor_t sensor;
+
+public:
+    Ultrasonic(gpio_num_t gpio_trigger, gpio_num_t gpio_echo);
+    std::string get_distance();
+
+    static void task_Ultrasonic(void *_dist);
+};
+
 #endif
