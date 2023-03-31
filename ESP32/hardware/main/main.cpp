@@ -17,6 +17,7 @@ using namespace std;
 MyLog demoLog(LOG_TAG_MAIN);
 GPS *sensorGPS;
 Ultrasonic *ultrasonic;
+Servo *servo;
 int num = 0;
 /**
  * typedef enum {
@@ -71,10 +72,16 @@ extern "C" void app_main(void)
     //     demoLog.logI("GPS data: %s", sensorGPS->get_location().data());
     //     vTaskDelay(2000 / portTICK_PERIOD_MS);
     // }
-    ultrasonic = new Ultrasonic(GPIO_NUM_4, GPIO_NUM_5);
-    while(1){
-        demoLog.logI("Ultrasonic data: %s", ultrasonic->get_distance().data());
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    
+    // ultrasonic = new Ultrasonic(GPIO_NUM_4, GPIO_NUM_5);
+    // while(1){
+    //     demoLog.logI("Ultrasonic data: %s", ultrasonic->get_distance().data());
+    //     vTaskDelay(2000 / portTICK_PERIOD_MS);
+    // }
+
+    servo = new Servo(PIN_SERVO, LEDC_CHANNEL_0);
+    while(1) {
+        servo->task_Servo();
     }
 
 }

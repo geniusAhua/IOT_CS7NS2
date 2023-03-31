@@ -66,8 +66,8 @@ private:
 
 public:
     Servo(gpio_num_t pin, ledc_channel_t chan);
-    static void task_Servo();
-    void set_angle_to_zero();
+    void task_Servo();
+    // void set_angle_to_zero();
 };
 
 #endif

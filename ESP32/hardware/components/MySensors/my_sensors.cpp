@@ -154,3 +154,12 @@ Servo::Servo(gpio_num_t pin = PIN_SERVO, ledc_channel_t chan = LEDC_CHANNEL_0)
     iot_servo_init(LEDC_LOW_SPEED_MODE, &servo_cfg);
 }
 
+void Servo::task_Servo() 
+{
+    esp_err_t err_turn = iot_servo_write_angle(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 186);
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    Servo::ServoLog.logI(esp_err_to_name(err_turn));
+    esp_err_t err_back = iot_servo_write_angle(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 0);
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    Servo::ServoLog.logI(esp_err_to_name(err_back));
+}
