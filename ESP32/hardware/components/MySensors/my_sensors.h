@@ -7,6 +7,8 @@
 #include "driver/gpio.h"
 #include "driver/uart.h"
 #include "my_log.h"
+#include "ultrasonic.h"
+#include "iot_servo.h"
 
 class GPS
 {
@@ -17,7 +19,7 @@ private:
         SemaphoreHandle_t mutex_data;
     } GPS_task_t;
     int gpio_rx;
-    int gpio_tx;
+    int gpio_tx;    
     static MyLog GPSLog;
     GPS_task_t parameters;
 
@@ -39,19 +41,33 @@ private:
     {
         float *dist;
         SemaphoreHandle_t mutex_dist;
+        ultrasonic_sensor_t sensor;
     } Ultrasonic_task_t;
 
     gpio_num_t trigger;
     gpio_num_t echo;
     static MyLog UltrasonicLog;
     Ultrasonic_task_t parameters;
-    static ultrasonic_sensor_t sensor;
+    // static ultrasonic_sensor_t sensor;
 
 public:
     Ultrasonic(gpio_num_t gpio_trigger, gpio_num_t gpio_echo);
     std::string get_distance();
 
     static void task_Ultrasonic(void *_dist);
+};
+
+class Servo
+{   
+private:
+    static MyLog ServoLog;
+    gpio_num_t pin;
+    servo_config_t servo_cfg;
+
+public:
+    Servo(gpio_num_t pin, ledc_channel_t chan);
+    static void task_Servo();
+    void set_angle_to_zero();
 };
 
 #endif

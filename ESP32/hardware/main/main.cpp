@@ -6,6 +6,7 @@
 #include "my_log.h"
 #include "my_event_loop.h"
 #include "my_sensors.h"
+#include "my_const.h"
 
 // ESP32 GPIO12 can not be set to high
 #define TXD_PIN (GPIO_NUM_21)
@@ -15,6 +16,7 @@ using namespace std;
 
 MyLog demoLog(LOG_TAG_MAIN);
 GPS *sensorGPS;
+Ultrasonic *ultrasonic;
 int num = 0;
 /**
  * typedef enum {
@@ -69,4 +71,10 @@ extern "C" void app_main(void)
     //     demoLog.logI("GPS data: %s", sensorGPS->get_location().data());
     //     vTaskDelay(2000 / portTICK_PERIOD_MS);
     // }
+    ultrasonic = new Ultrasonic(GPIO_NUM_4, GPIO_NUM_5);
+    while(1){
+        demoLog.logI("Ultrasonic data: %s", ultrasonic->get_distance().data());
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
+
 }

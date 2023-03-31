@@ -68,56 +68,89 @@ std::string GPS::get_location()
     return position;
 }
 
+/**
+ * Ultrasonic implementation
+ * 
+*/
 // Ultrasonic implementation
-MyLog Ultrasonic::UltrasonicLog(LOG_TAG_SENSORS_GPS);
+MyLog Ultrasonic::UltrasonicLog(LOG_TAG_SENSORS_ULTRASONIC);
 
-Ultrasonic::Ultrasonic(gpio_num_t trigger, gpio_num_t echo) : parameters{.mutex_dist = xSemaphoreCreateMutex()}
+Ultrasonic::Ultrasonic(gpio_num_t trigger = PIN_ULTRASONIC_TRIGGER, gpio_num_t echo = PIN_ULTRASONIC_ECHO) : parameters({.dist = new float, .mutex_dist = xSemaphoreCreateMutex(), .sensor = {.trigger_pin = trigger, .echo_pin = echo}})
 {
-    this->trigger = PIN_ULTRASONIC_TRIGGER;
-    this->echo = PIN_ULTRASONIC_ECHO;
-    sensor = {
-        .trigger_pin = trigger,
-        .echo_pin = echo
-    };
-    ultrasonic_init(&sensor);
-    xTaskCreate(&(Ultrasonic::task_Ultrasonic), TASK_NAME_ULTRASONIC, configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
+    this->trigger = trigger;
+    this->echo = echo;
+    xTaskCreate(&(Ultrasonic::task_Ultrasonic), TASK_NAME_ULTRASONIC, 1024 * 4, (void*)&this->parameters, 1, NULL);
 }
 
 void Ultrasonic::task_Ultrasonic(void *_parameters) 
 {
     Ultrasonic_task_t *parameters = (Ultrasonic_task_t*)_parameters;
+    esp_err_t res = ESP_FAIL;
+    ESP_ERROR_CHECK(ultrasonic_init(&parameters->sensor));
     while(1) {
-        if (xSemaphoreTake((*parameters).mutex_dist, portMAX_DELAY) == pdTRUE) {
+
+        if (xSemaphoreTake(parameters->mutex_dist, portMAX_DELAY) == pdTRUE) {
             
-            esp_err_t res = ultrasonic_measure(&sensor, MAX_DISTANCE_CM, (*parameters).dist);
-            switch (res)
-            {
-                case ESP_ERR_ULTRASONIC_PING:
-                    Ultrasonic::UltrasonicLog.logI("Cannot ping (device is in invalid state)\n");
-                    break;
-                case ESP_ERR_ULTRASONIC_PING_TIMEOUT:
-                    Ultrasonic::UltrasonicLog.logI("Ping timeout (no device found)\n");
-                    break;
-                case ESP_ERR_ULTRASONIC_ECHO_TIMEOUT:
-                    Ultrasonic::UltrasonicLog.logI("Echo timeout (i.e. distance too big)\n");                    
-                    break;
-                default:
-                    Ultrasonic::UltrasonicLog.logI(esp_err_to_name(res));
-                    // printf("%s\n", esp_err_to_name(res));
-            }
-            xSemaphoreGive((*parameters).mutex_dist);
+            res = ultrasonic_measure(&parameters->sensor, MAX_DISTANCE_CM, parameters->dist);
+            
+            xSemaphoreGive(parameters->mutex_dist);
         }
+        
+        switch (res)
+        {
+            case ESP_ERR_ULTRASONIC_PING:
+                Ultrasonic::UltrasonicLog.logI("Cannot ping (device is in invalid state)\n");
+                break;
+            case ESP_ERR_ULTRASONIC_PING_TIMEOUT:
+                Ultrasonic::UltrasonicLog.logI("Ping timeout (no device found)\n");
+                break;
+            case ESP_ERR_ULTRASONIC_ECHO_TIMEOUT:
+                Ultrasonic::UltrasonicLog.logI("Echo timeout (i.e. distance too big)\n");                    
+                break;
+            default:
+                Ultrasonic::UltrasonicLog.logI(esp_err_to_name(res));
+                // printf("%s\n", esp_err_to_name(res));
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(3000));
     }
 }
 
 std::string Ultrasonic::get_distance()
 {
+    // std::string dist = "";
     std::string dist = "";
     if (xSemaphoreTake(this->parameters.mutex_dist, portMAX_DELAY) == pdTRUE)
     {
-        dist = std::to_string((*this->parameters.dist));
+        dist = std::to_string(*(this->parameters.dist));
 
         xSemaphoreGive(this->parameters.mutex_dist);
     }
     return dist;
 }
+
+// Servo implementation
+MyLog Servo::ServoLog(LOG_TAG_SERVO);
+
+Servo::Servo(gpio_num_t pin = PIN_SERVO, ledc_channel_t chan = LEDC_CHANNEL_0) 
+{
+    this->pin = pin;
+    this->servo_cfg = {
+        .max_angle = SERVO_MAX_ANGLE,
+        .min_width_us = SERVO_MIN_WIDTH,
+        .max_width_us = SERVO_MAX_WIDTH,
+        .freq = SERVO_FREQ,
+        .timer_number = LEDC_TIMER_0,
+        .channels = {
+            .servo_pin = {
+                pin,
+            },
+            .ch = {
+                chan,
+            }
+        },
+        .channel_number = 1,
+    };
+    iot_servo_init(LEDC_LOW_SPEED_MODE, &servo_cfg);
+}
+

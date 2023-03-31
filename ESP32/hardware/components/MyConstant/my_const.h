@@ -11,6 +11,7 @@
 #define LOG_TAG_EVENT_LOOP              "SmartBin-Event-Loop"
 #define LOG_TAG_SENSORS_GPS             "SmartBin-Sensors_GPS"
 #define LOG_TAG_SENSORS_ULTRASONIC      "SmartBin-Sensors_Ultrasonic"
+#define LOG_TAG_SERVO                   "SmartBin-SERVO"
 
 //System Configuration
 #define WIFI_SSID                       "刘阿花的iPhone"
@@ -29,12 +30,19 @@
 //Configuration of PIN
 #define PIN_BUTTON1                     GPIO_NUM_12
 #define PIN_BUTTON1_MOD                 GPIO_MODE_OUTPUT
-#define PIN_GPS_TX                      GPIO_NUM_21
-#define PIN_GPS_RX                      GPIO_NUM_19
+#define PIN_GPS_TX                      GPIO_NUM_22
+#define PIN_GPS_RX                      GPIO_NUM_23
 #define OUTPUT_LEVEL                    ESP_LOG_VERBOSE
 
 #define PIN_ULTRASONIC_TRIGGER          GPIO_NUM_4
 #define PIN_ULTRASONIC_ECHO             GPIO_NUM_5
+
+// configuration of Servo
+#define PIN_SERVO                       GPIO_NUM_19
+#define SERVO_MAX_ANGLE                 180
+#define SERVO_MIN_WIDTH                 500                 
+#define SERVO_MAX_WIDTH                 2500
+#define SERVO_FREQ                      50                 
 
 //Variable for FreeRTOS system
 #define STA_START BIT0
