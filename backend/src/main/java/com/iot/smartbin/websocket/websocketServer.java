@@ -51,7 +51,9 @@ public class websocketServer {
 
     }
     public void sendMessage(String msg) throws IOException {
-        this.session.getBasicRemote().sendText(msg);
+        for(websocketServer item: webSocketSet){
+            item.session.getBasicRemote().sendText(msg);
+        }
     }
 
 
