@@ -19,8 +19,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class websocketServer {
     private Session session;
     private int onlineCount = 0;
-    private static CopyOnWriteArraySet<websocketServer> webSocketSet = new CopyOnWriteArraySet<websocketServer>();
-    private Logger logger = LoggerFactory.getLogger(websocketServer.class);
+    private static final CopyOnWriteArraySet<websocketServer> webSocketSet = new CopyOnWriteArraySet<websocketServer>();
+    private static final Logger logger = LoggerFactory.getLogger(websocketServer.class);
 
     @OnOpen
     public void onOpen(Session session){
