@@ -1,35 +1,35 @@
 package com.iot.smartbin.controller;
 
-import com.iot.smartbin.common.SuccessMessage;
-import com.iot.smartbin.pojo.Bin;
-import com.iot.smartbin.service.impl.BinInfoServiceImpl;
+import com.iot.smartbin.mqtt.MqttPubSubService;
+import com.iot.smartbin.msg.BinInfoMsg;
+import com.iot.smartbin.service.BinInfoService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
+import javax.websocket.server.ServerEndpoint;
 import java.util.*;
 
 @RestController
 public class BinController {
     @Autowired
-    private BinInfoServiceImpl binInfoService;
+    private BinInfoService binInfoService;
 
-    @RequestMapping(value = "/bin/details", method = RequestMethod.GET)
-    public Object getBinDetails(HttpServletRequest req){
-        String user_id = req.getParameter("userId").trim();
-        List<Bin> list = binInfoService.getBinInfoViaUserId(Integer.parseInt(user_id));
-        List<Map<String, String>> ans = new ArrayList<>();
-        for(Bin bin : list){
-            Map<String, String> map = new HashMap<>();
-            map.put("weight", bin.getWeight().toString());
-            map.put("height", bin.getHeight().toString());
-            map.put("isFull", bin.getIsFull().toString());
-            map.put("longitude", bin.getLongitude().toString());
-            map.put("latitude", bin.getLatitude().toString());
-        }
-        return new SuccessMessage<List<Map<String, String>>>("details of the bin", ans).getMessage();
+    @Autowired
+    private MqttPubSubService mqttService;
+
+    @GetMapping("/api/bin/info")
+    public Map<String, String> getBinDetails(@RequestParam Integer id){
+        return binInfoService.binInfo(id);
+    }
+
+
+    // example of publishing a message to aws iot platform
+    @PostMapping("/publish")
+    public String publishBinMessage() {
+        mqttService.publishMessage("trash_weight", new BinInfoMsg(20));
+
+        return "message Published Successfully";
     }
 
 }
