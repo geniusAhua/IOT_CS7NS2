@@ -3,6 +3,7 @@ import {FreeCamera, Vector3, HemisphericLight, MeshBuilder, StandardMaterial, Co
 import SceneComponent from "./SceneComponent"; // uses above component in same directory
 import "../less/bin.less";
 import GUI from "babylonjs-gui";
+import { BinDataApi } from '../request/api';
 
 let sphere;
 let cylinder;
@@ -33,8 +34,7 @@ const onSceneReady = (scene) => {
     // Move the sphere upward 1/2 its height
     sphere.position.y = 2;
     cylinder.position.y = 1;
-    // Our built-in 'ground' shape.
-    MeshBuilder.CreateGround("ground", { width: 6, height: 6 }, scene);
+
 };
 
 /**
@@ -48,11 +48,35 @@ const onRender = (scene) => {
         cylinder.rotation.y += (rpm / 60) * Math.PI * 2 * (deltaTimeInMillis / 1000);
     }
 };
+let params={userId:1}
+let weight:number
+let height:number
+BinDataApi({params}).then(res=>{
+        let info = JSON.parse(JSON.stringify(res))
+        weight = info.weight
+        height = info.height
+    }).catch(function(err){
+        console.log(err)
+    })
+
+let ws = new WebSocket('ws://localhost:8080/websocket/client');
+// 在客户端与服务端建立连接后触发
+ws.onopen = function() {
+    console.log("Connection open.");
+    ws.send('hello');
+};
+// 在服务端给客户端发来消息的时候触发
+ws.onmessage = function(res) {
+    console.log(res);       // 打印的是MessageEvent对象
+    console.log(res.data);  // 打印的是收到的消息
+};
 
 export default function Bin() {
     return (
         <div style={{width:"100%",height:"0%"}}>
-            <SceneComponent antialias onSceneReady={onSceneReady} onRender={onRender} id="my-canvas" style={{width:"100%",height:"30vh",marginTop:"5vh"}}/>
+            <SceneComponent antialias onSceneReady={onSceneReady} onRender={onRender} id="my-canvas" style={{width:"100%",height:"60vh",marginTop:"5vh"}}/>
+            <h2 style={{position:"relative",left:"20%",marginTop:"-10vh"}}>Weight:  {weight}</h2>
+            <h2 style={{position:"relative",left:"20%"}}>Height:   {height}</h2>
         </div>
     )
 }

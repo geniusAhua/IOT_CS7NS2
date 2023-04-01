@@ -1,28 +1,33 @@
 import React from 'react';
-import logo from './logo.svg';
-import { Button } from 'antd-mobile'
+import {Routes, Route, Link, useLocation} from "react-router-dom";
+import {Outlet} from 'react-router-dom';
 import './App.css';
+import Header from "./components/header";
+import Footer from "./components/footer";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-          <Button color='primary'>Primary</Button>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <div id="app">
+            <div style={{position: "absolute", top: "0px", width: "100%"}}>
+                <Header/>
+                <div className="container_box" style={{position: "absolute", top: "100%", width: "100%"}}>
+                    <Outlet/>
+                </div>
+            </div>
+            <div style={{
+                position: "absolute",
+                bottom: "0px",
+                width: "100%",
+                background: "rgba( 255, 245, 245, 0 )",
+                boxShadow: "0 8px 32px 0 rgba( 31, 38, 135, 0.17 )",
+                backdropFilter: "blur( 1.5px )",
+                borderRadius: "10px",
+                border: "1px solid rgba( 255, 255, 255, 0.18 )"
+            }}>
+                <Footer/>
+            </div>
+        </div>
+    );
 }
 
 export default App;
