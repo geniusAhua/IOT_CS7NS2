@@ -127,7 +127,7 @@ void WiFi::app_task(void *pt){
     esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &run_on_event, (void *)tag_conn.data(), &instance_any_id);
     esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &run_on_event, (void *)tag_conn.data(), &instance_got_ip);
 
-    xEventGroupWaitBits(MyEventLoop::s_wifi_event_group(), STA_START, pdFALSE, pdFALSE, portMAX_DELAY);
+    xEventGroupWaitBits(MyEventLoop::smartBin_event_group(), STA_START, pdFALSE, pdFALSE, portMAX_DELAY);
     wifiLog.logI("Connecting to %s...", WiFi::SSID.data());
     esp_err_t ret = esp_wifi_connect();
     if (ret != ESP_OK) {
@@ -155,10 +155,11 @@ void WiFi::run_on_event(void* handler_arg, esp_event_base_t base, int32_t id, vo
             switch (id)
             {
                 case WIFI_EVENT_STA_START:
-                    xEventGroupSetBits(MyEventLoop::s_wifi_event_group(), STA_START);
+                    xEventGroupSetBits(MyEventLoop::smartBin_event_group(), STA_START);
                     break;
                 case WIFI_EVENT_STA_DISCONNECTED:
                     do_disconnect();
+                    MyEventLoop::post_event_to(smartBin_event_t::WIFI_DISCONNECT, NULL, 0, portMAX_DELAY);
                     break;
                 default:
                     break;
@@ -168,8 +169,8 @@ void WiFi::run_on_event(void* handler_arg, esp_event_base_t base, int32_t id, vo
             ip_event_got_ip_t* ip_config = (ip_event_got_ip_t *) event_data;
             switch(id){
                 case IP_EVENT_STA_GOT_IP:
-
                     wifiLog.logI("Got IP event, IP address:" IPSTR, IP2STR(&ip_config->ip_info.ip));
+                    MyEventLoop::post_event_to(smartBin_event_t::WIFI_CONFIG_DONE, NULL, 0, portMAX_DELAY);
                     s_retry_num = 0;
                     if (s_semph_get_ip_addrs) {
                         xSemaphoreGive(s_semph_get_ip_addrs);

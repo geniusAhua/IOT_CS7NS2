@@ -1,10 +1,11 @@
 #include "my_event_loop.h"
-#include "my_const.h"
 
 //protperties of MyEventLoop
 bool MyEventLoop::isInit = false;
 MyLog MyEventLoop::eventLoopLog(LOG_TAG_EVENT_LOOP);
-esp_event_base_t MyEventLoop::SMARTBIN_BASE = SMARTBIN_EVENT_BASE;
+const esp_event_base_t MyEventLoop::SMARTBIN_BASE = SMARTBIN_EVENT_BASE;
+const EventGroupHandle_t MyEventLoop::_s_wifi_event_group = xEventGroupCreate();
+esp_event_loop_handle_t MyEventLoop::smartBin_loop_handler;
 // typedef struct {
 //     int32_t queue_size;                         /**< size of the event loop queue */
 //     const char *task_name;                      /**< name of the event loop task; if NULL,
@@ -15,18 +16,16 @@ esp_event_base_t MyEventLoop::SMARTBIN_BASE = SMARTBIN_EVENT_BASE;
 //                                                         ignored if task name is NULL */
 // } esp_event_loop_args_t;
 esp_event_loop_args_t MyEventLoop::smartBin_loop_args = {
-    .queue_size = 5,
+    .queue_size = static_cast<uint32_t>(smartBin_event_t::Count) + 10,
     .task_name = "SmartBin_Event_Loop",
     .task_priority = uxTaskPriorityGet(NULL),
     .task_stack_size = 1024*5,                  //5KB
     .task_core_id = tskNO_AFFINITY,
 };
 
-
 void MyEventLoop::init(){
     if(!MyEventLoop::isInit){
         MyEventLoop::isInit = true;
-        MyEventLoop::_s_wifi_event_group = xEventGroupCreate();
         eventLoopLog.logI("Create an Event Loop for SmartBin.");
         ESP_ERROR_CHECK(esp_event_loop_create(&smartBin_loop_args, &smartBin_loop_handler));
     }
@@ -34,6 +33,7 @@ void MyEventLoop::init(){
 
 void MyEventLoop::post_event_to(smartBin_event_t eventId, const void *eventData, size_t eventDataSize, TickType_t ticksToWait){
     if(MyEventLoop::isInit){
+        MyEventLoop::eventLoopLog.logW("post event!");
         ESP_ERROR_CHECK(esp_event_post_to(MyEventLoop::smartBin_loop_handler, MyEventLoop::SMARTBIN_BASE, static_cast<int32_t>(eventId), eventData, eventDataSize, ticksToWait));
     }
     else{
@@ -50,11 +50,12 @@ void MyEventLoop::smartBin_handler_register(smartBin_event_t eventId, esp_event_
     }
 }
 
-const EventGroupHandle_t MyEventLoop::s_wifi_event_group(){
+EventGroupHandle_t MyEventLoop::smartBin_event_group(){
     return MyEventLoop::_s_wifi_event_group;
 }
 
-MyEventLoop::~MyEventLoop(){
-    //Delete
-    ESP_ERROR_CHECK(esp_event_loop_delete(&smartBin_loop_handler));
-}//~MyEventLoop()
+// MyEventLoop::~MyEventLoop(){
+//     //Delete
+//     MyEventLoop::isInit = false;
+//     ESP_ERROR_CHECK(esp_event_loop_delete(&smartBin_loop_handler));
+// }//~MyEventLoop()

@@ -1,12 +1,15 @@
 #include <stdio.h>
+#include <chrono>
+#include <ctime>
 #include "driver/gpio.h"
 #include "driver/uart.h"
+#include "ArduinoJSON.h"
 #include "my_const.h"
 #include "my_wifi.h"
 #include "my_log.h"
 #include "my_event_loop.h"
 #include "my_sensors.h"
-#include "my_const.h"
+#include "my_MQTT.h"
 
 // ESP32 GPIO12 can not be set to high
 #define TXD_PIN (GPIO_NUM_21)
@@ -32,23 +35,13 @@ uint8_t s_led_state = 0;
  *    ESP_LOG_VERBOSE     !< Bigger chunks of debugging information, or frequent messages which can potentially flood the output.
  * } esp_log_level_t;
  **/
-/**
- * 串口通信
- * 1. 设置通信参数 - 设置波特率，数据位，停止位等
- * 2. 设置通信引脚 - 为连接设备分配引脚
- * 3. 驱动安装 - 为UART驱动分配ESP32的资源
- * 4. 运行UART通信 - 发送/接受数据
- * 5. 使用中断 - 在特定的通信事件中触发中断
- * 6. 删除驱动程序 - 如果不再需要UART通信，释放分配的资源
- */
 
-/*
-task_list()
-显示当前的所有FreeRTOS任务
-使用前，请在menuconfig中启动
-Enable FreeRTOS trace facility
-Enable FreeRTOS stats formatting functions
-*/
+void test_sub_callback(const std::string topic, const std::string msg)
+{
+    demoLog.logI("test_sub_callback==>topic: %s, msg: %s", topic.data(), msg.data());
+    return;
+}
+
 void set_up()
 {
     demoLog.logI("Create a FreeRTOS Event Group and Initialize the customized EventLoop.");
@@ -58,6 +51,12 @@ void set_up()
 
     esp_log_level_set(LOG_TAG_MAIN, ESP_LOG_DEBUG);
     WiFi::connect();
+
+    MQTT::Init(0, NULL);
+
+    MQTT::Subscribe("test", test_sub_callback);
+    MQTT::Subscribe("test2", test_sub_callback);
+
 }
 
 void task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data){
@@ -109,12 +108,37 @@ void task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t even
 
 extern "C" void app_main(void)
 {
-    
-    // set_up();
+    set_up();
 
-    // demoLog.logI("Notification :%s", configUSE_TASK_NOTIFICATIONS ? "TRUE" : "FALSE");
-    // demoLog.logI("Num of it: %d", configTASK_NOTIFICATION_ARRAY_ENTRIES);
+    DynamicJsonDocument doc(1024);
 
+    demoLog.logI("Start Loop!");
+
+    doc["name"] = "John";
+    doc["age"] = 43;
+    doc["message"] = "Hello world!";
+    while(1){
+        MQTT::Publish("test", "hello world");
+        
+    // 获取当前时间点
+        auto now = std::chrono::system_clock::now();
+        
+        // 转换为time_t格式
+        std::time_t current_time = std::chrono::system_clock::to_time_t(now);
+        
+        // 转换为本地时间
+        std::tm* local_time = std::localtime(&current_time);
+        
+        // 格式化时间字符串
+        char time_str[20];
+        // std::strftime(time_str, sizeof(time_str), "%H:%M:%S", local_time);
+        doc["time"] = time_str;
+        std::string msg;
+        serializeJson(doc, msg);
+    //     MQTT::Publish("test2", msg);
+
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
+        
     sensorGPS = new GPS(PIN_GPS_RX, PIN_GPS_TX);
     // sensorGPS->add_handler(task_GPS);
     // while(1){
@@ -123,6 +147,7 @@ extern "C" void app_main(void)
     //     vTaskDelay(2000 / portTICK_PERIOD_MS);
     // }
     
+    }
     // ultrasonic = new Ultrasonic(GPIO_NUM_4, GPIO_NUM_5);
     // while(1){
     //     demoLog.logI("Ultrasonic data: %s", ultrasonic->get_distance().data());
