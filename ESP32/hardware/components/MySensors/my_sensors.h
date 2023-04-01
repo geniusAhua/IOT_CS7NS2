@@ -11,6 +11,7 @@
 #include "ultrasonic.h"
 #include "iot_servo.h"
 #include "dht.h"
+#include "my_const.h"
 
 typedef struct{
     float   altitude = 0;
@@ -125,6 +126,18 @@ public:
     Servo(gpio_num_t pin, ledc_channel_t chan);
     void task_Servo();
     // void set_angle_to_zero();
+};
+
+class Led
+{
+private:
+    gpio_num_t pin;
+    gpio_mode_t mode;    
+    uint8_t s_led_state;
+
+public:
+    Led(gpio_num_t pin, gpio_mode_t mode);
+    void toggle_led();
 };
 
 #endif

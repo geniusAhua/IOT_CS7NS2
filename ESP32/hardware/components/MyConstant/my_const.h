@@ -30,10 +30,10 @@
 #define TASK_NAME_HUMITURE              "HUMITURE_TASK"
 
 //Configuration of PIN
-#define PIN_BUTTON1                     GPIO_NUM_26
-#define PIN_BUTTON2                     GPIO_NUM_4
-#define PIN_BUTTON1_MOD                 GPIO_MODE_OUTPUT
-#define PIN_BUTTON2_MOD                 GPIO_MODE_INPUT
+#define PIN_RED                         GPIO_NUM_25
+#define PIN_YELLOW                      GPIO_NUM_26
+#define PIN_GREEN                       GPIO_NUM_27
+#define OUTPUT_MODE                     GPIO_MODE_OUTPUT
 #define PIN_GPS_TX                      GPIO_NUM_22
 #define PIN_GPS_RX                      GPIO_NUM_23
 #define OUTPUT_LEVEL                    ESP_LOG_VERBOSE

@@ -60,19 +60,6 @@ void set_up()
     WiFi::connect();
 }
 
-void config_led() 
-{
-    gpio_reset_pin(PIN_BUTTON1);
-    gpio_set_direction(PIN_BUTTON1, PIN_BUTTON1_MOD);
-    // gpio_reset_pin(PIN_BUTTON2);
-    // gpio_set_direction(PIN_BUTTON2, PIN_BUTTON2_MOD);
-}
-
-void blink_led() 
-{
-    gpio_set_level(PIN_BUTTON1, s_led_state);
-}
-
 void task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data){
     // GPS_task_t *parameters = (GPS_task_t *)event_handler_arg;
 
@@ -108,9 +95,21 @@ void task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t even
             break;
     }
 }
+/**
+ * logic:
+ *  - Ultrasonic
+ *      - get capacity data and send to aws iot
+ *  - Led (work with ultrasonic):
+ *      - three levels -- Low: turn green; Medium: turn yello; High: red;
+ *  - GPS:
+ *      - get geo location data and send to aws iot
+ *  - Humidity
+ *      - get humidity data and send to aws iot
+*/
 
 extern "C" void app_main(void)
 {
+    
     // set_up();
 
     // demoLog.logI("Notification :%s", configUSE_TASK_NOTIFICATIONS ? "TRUE" : "FALSE");
@@ -141,11 +140,24 @@ extern "C" void app_main(void)
     //     demoLog.logI("Humidity: %d, temperature: %d", humiTmp.getHumidity(), humiTmp.getTemperature());
     //     vTaskDelay(2000 / portTICK_PERIOD_MS);
     // }
-    // config_led();
-    // while (1) 
-    // {
-    //     blink_led();
-    //     s_led_state = !s_led_state;
-    //     vTaskDelay(2000 / portTICK_PERIOD_MS);
-    // }
+    
+    Led red = Led(PIN_RED, OUTPUT_MODE);
+    Led yellow = Led(PIN_YELLOW, OUTPUT_MODE);
+    Led green = Led(PIN_GREEN, OUTPUT_MODE);
+    while (1) 
+    {
+        
+        red.toggle_led();
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        red.toggle_led();
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        yellow.toggle_led();
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        yellow.toggle_led();
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        green.toggle_led();
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        green.toggle_led();
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
 }

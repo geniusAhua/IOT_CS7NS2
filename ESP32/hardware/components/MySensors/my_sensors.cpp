@@ -274,3 +274,18 @@ void Servo::task_Servo()
     vTaskDelay(pdMS_TO_TICKS(2000));
     Servo::ServoLog.logI(esp_err_to_name(err_back));
 }
+
+Led::Led(gpio_num_t pin, gpio_mode_t mode)
+{
+    this->pin = pin;
+    this->mode = mode;
+    this->s_led_state = 0;
+    gpio_reset_pin(pin);
+    gpio_set_direction(pin, mode);
+}
+
+void Led::toggle_led()
+{   
+    this->s_led_state = !this->s_led_state;
+    gpio_set_level(this->pin, this->s_led_state);
+}
