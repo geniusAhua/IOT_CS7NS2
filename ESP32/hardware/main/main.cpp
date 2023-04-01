@@ -73,16 +73,54 @@ void blink_led()
     gpio_set_level(PIN_BUTTON1, s_led_state);
 }
 
+void task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data){
+    // GPS_task_t *parameters = (GPS_task_t *)event_handler_arg;
+
+    gps_t *GPS_info = NULL;
+    switch(event_id){
+        case GPS_UPDATE:
+            GPS_info = (gps_t *)event_data;
+            demoLog.logI("%d/%d/%d %d:%d:%d => \r\n\t\t\t\t\t\tlatitude   = %.05f°N\r\n\t\t\t\t\t\tlongitude = %.05f°E\r\n\t\t\t\t\t\taltitude   = %.02fm\r\n\t\t\t\t\t\tspeed      = %fm/s",
+                 GPS_info->date.year + 1970, GPS_info->date.month, GPS_info->date.day,
+                 GPS_info->tim.hour -3, GPS_info->tim.minute, GPS_info->tim.second,
+                 GPS_info->latitude, GPS_info->longitude, GPS_info->altitude, GPS_info->speed);
+
+            // if (xSemaphoreTake(parameters->mutex_data, portMAX_DELAY) == pdTRUE){
+            //     parameters->GPS_info = * new GPS_info_t{
+            //         .altitude = GPS_info->altitude,
+            //         .latitude = GPS_info->latitude,
+            //         .longitude = GPS_info->longitude,
+            //         .year = GPS_info->date.year + GPS::YEAR_BASE,
+            //         .month = GPS_info->date.month,
+            //         .day = GPS_info->date.day,
+            //         .hour = GPS_info->tim.hour + GPS::TIME_ZONE,
+            //         .minute = GPS_info->tim.minute,
+            //         .second = GPS_info->tim.second
+            //     };
+
+                // xSemaphoreGive(parameters->mutex_data);
+            // }
+            break;
+        case GPS_UNKNOWN:
+            demoLog.logW("Unkown statement : %s", (char*)event_data);
+            break;
+        default:
+            break;
+    }
+}
+
 extern "C" void app_main(void)
 {
     // set_up();
 
-    demoLog.logI("Notification :%s", configUSE_TASK_NOTIFICATIONS ? "TRUE" : "FALSE");
-    demoLog.logI("Num of it: %d", configTASK_NOTIFICATION_ARRAY_ENTRIES);
+    // demoLog.logI("Notification :%s", configUSE_TASK_NOTIFICATIONS ? "TRUE" : "FALSE");
+    // demoLog.logI("Num of it: %d", configTASK_NOTIFICATION_ARRAY_ENTRIES);
 
-    // sensorGPS = new GPS(PIN_GPS_RX, PIN_GPS_TX);
+    sensorGPS = new GPS(PIN_GPS_RX, PIN_GPS_TX);
+    // sensorGPS->add_handler(task_GPS);
     // while(1){
-    //     demoLog.logI("GPS data: %s", sensorGPS->get_location().data());
+    //     GPS_info_t gps_info = sensorGPS->get_location();
+    //     demoLog.logI("GPS latitude: %.05f°N", gps_info.latitude);
     //     vTaskDelay(2000 / portTICK_PERIOD_MS);
     // }
     
@@ -103,11 +141,11 @@ extern "C" void app_main(void)
     //     demoLog.logI("Humidity: %d, temperature: %d", humiTmp.getHumidity(), humiTmp.getTemperature());
     //     vTaskDelay(2000 / portTICK_PERIOD_MS);
     // }
-    config_led();
-    while (1) 
-    {
-        blink_led();
-        s_led_state = !s_led_state;
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-    }
+    // config_led();
+    // while (1) 
+    // {
+    //     blink_led();
+    //     s_led_state = !s_led_state;
+    //     vTaskDelay(2000 / portTICK_PERIOD_MS);
+    // }
 }

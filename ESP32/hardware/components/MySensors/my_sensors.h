@@ -6,35 +6,57 @@
 #include <cstring>
 #include "driver/gpio.h"
 #include "driver/uart.h"
+#include "nmea_parser.h"
 #include "my_log.h"
 #include "ultrasonic.h"
 #include "iot_servo.h"
 #include "dht.h"
 
+typedef struct{
+    float   altitude = 0;
+    float   latitude = 0;
+    float   longitude = 0;
+    float   speed = 0;
+    int     year = 0;
+    int     month = 0;
+    int     day = 0;
+    int     hour = 0;
+    int     minute = 0;
+    int     second = 0;
+} GPS_info_t;
+
 class GPS
 {
 private:
+
     typedef struct
     {
-        uint8_t *data;
+        GPS_info_t GPS_info;
         SemaphoreHandle_t mutex_data;
     } GPS_task_t;
+
     int gpio_rx;
     int gpio_tx;    
     static MyLog GPSLog;
     GPS_task_t parameters;
+    uint8_t UART_buffer;
 
-    static const int RX_BUFFER;
+    static const int RX_BUFFER_SIZE;
     static uint32_t interval;
     static const uart_config_t uart_config;
-
-    static void IRAM_ATTR uart_rx_intr_handler(void *arg);
-
-public:
-    GPS(int gpio_rx = UART_PIN_NO_CHANGE, int gpio_tx = UART_PIN_NO_CHANGE);
-    std::string get_location();
+    nmea_parser_config_t GPS_config;
+    nmea_parser_handle_t nmea_handler;
+    static const uint8_t TIME_ZONE;
+    static const uint16_t YEAR_BASE;
 
     static void task_GPS(void *_data);
+    static void task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+
+public:
+    GPS(uint32_t gpio_rx = UART_PIN_NO_CHANGE, uint32_t gpio_tx = UART_PIN_NO_CHANGE);
+    GPS_info_t get_location();
+    void add_handler(void(*handler)(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data));
+    
 }; // GPS
 
 class Ultrasonic 
