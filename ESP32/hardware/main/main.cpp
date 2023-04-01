@@ -18,7 +18,10 @@ MyLog demoLog(LOG_TAG_MAIN);
 GPS *sensorGPS;
 Ultrasonic *ultrasonic;
 Servo *servo;
+Humiture *humiture;
 int num = 0;
+uint8_t s_led_state = 0;
+
 /**
  * typedef enum {
  *    ESP_LOG_NONE,       !< No log output
@@ -55,9 +58,19 @@ void set_up()
 
     esp_log_level_set(LOG_TAG_MAIN, ESP_LOG_DEBUG);
     WiFi::connect();
+}
 
+void config_led() 
+{
     gpio_reset_pin(PIN_BUTTON1);
     gpio_set_direction(PIN_BUTTON1, PIN_BUTTON1_MOD);
+    // gpio_reset_pin(PIN_BUTTON2);
+    // gpio_set_direction(PIN_BUTTON2, PIN_BUTTON2_MOD);
+}
+
+void blink_led() 
+{
+    gpio_set_level(PIN_BUTTON1, s_led_state);
 }
 
 extern "C" void app_main(void)
@@ -79,9 +92,22 @@ extern "C" void app_main(void)
     //     vTaskDelay(2000 / portTICK_PERIOD_MS);
     // }
 
-    servo = new Servo(PIN_SERVO, LEDC_CHANNEL_0);
-    while(1) {
-        servo->task_Servo();
-    }
+    // servo = new Servo(PIN_SERVO, LEDC_CHANNEL_0);
+    // while(1) {
+    //     servo->task_Servo();
+    // }
 
+    // humiture = new Humiture(PIN_HUMITURE);
+    // while (1) {
+    //     HumiAndTemp humiTmp = humiture->getHumiTemp();
+    //     demoLog.logI("Humidity: %d, temperature: %d", humiTmp.getHumidity(), humiTmp.getTemperature());
+    //     vTaskDelay(2000 / portTICK_PERIOD_MS);
+    // }
+    config_led();
+    while (1) 
+    {
+        blink_led();
+        s_led_state = !s_led_state;
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
 }
