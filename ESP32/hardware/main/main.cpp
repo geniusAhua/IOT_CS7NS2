@@ -42,22 +42,7 @@ void test_sub_callback(const std::string topic, const std::string msg)
     return;
 }
 
-void set_up()
-{
-    demoLog.logI("Create a FreeRTOS Event Group and Initialize the customized EventLoop.");
-    MyEventLoop::init();
 
-    demoLog.logI("Start Init!");
-
-    esp_log_level_set(LOG_TAG_MAIN, ESP_LOG_DEBUG);
-    WiFi::connect();
-
-    MQTT::Init(0, NULL);
-
-    MQTT::Subscribe("test", test_sub_callback);
-    MQTT::Subscribe("test2", test_sub_callback);
-
-}
 
 void task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data){
     // GPS_task_t *parameters = (GPS_task_t *)event_handler_arg;
@@ -102,9 +87,26 @@ void task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t even
  *      - three levels -- Low: turn green; Medium: turn yello; High: red;
  *  - GPS:
  *      - get geo location data and send to aws iot
- *  - Humidity
+ *  - Humidity:
  *      - get humidity data and send to aws iot
 */
+void set_up()
+{
+    demoLog.logI("Create a FreeRTOS Event Group and Initialize the customized EventLoop.");
+    MyEventLoop::init();
+
+    demoLog.logI("Start Init!");
+
+    esp_log_level_set(LOG_TAG_MAIN, ESP_LOG_DEBUG);
+    WiFi::connect();
+
+    MQTT::Init();
+
+
+    MQTT::Subscribe("test", test_sub_callback);
+    MQTT::Subscribe("test2", test_sub_callback);
+
+}
 
 extern "C" void app_main(void)
 {
@@ -114,13 +116,16 @@ extern "C" void app_main(void)
 
     demoLog.logI("Start Loop!");
 
+
     doc["name"] = "John";
     doc["age"] = 43;
     doc["message"] = "Hello world!";
-    while(1){
+    int i = 0;
+    while( i < 2){
+        i++;
         MQTT::Publish("test", "hello world");
         
-    // 获取当前时间点
+        // 获取当前时间点
         auto now = std::chrono::system_clock::now();
         
         // 转换为time_t格式
@@ -131,14 +136,43 @@ extern "C" void app_main(void)
         
         // 格式化时间字符串
         char time_str[20];
-        // std::strftime(time_str, sizeof(time_str), "%H:%M:%S", local_time);
+        std::strftime(time_str, sizeof(time_str), "%H:%M:%S", local_time);
         doc["time"] = time_str;
         std::string msg;
         serializeJson(doc, msg);
-    //     MQTT::Publish("test2", msg);
+        MQTT::Publish("test2", msg);
 
         vTaskDelay(5000 / portTICK_PERIOD_MS);
+    
+    }
+
+    demoLog.logW("subscribe test2\n");
+
+    
+    while(1){
+        MQTT::Publish("test", "hello world");
         
+        // 获取当前时间点
+        auto now = std::chrono::system_clock::now();
+        
+        // 转换为time_t格式
+        std::time_t current_time = std::chrono::system_clock::to_time_t(now);
+        
+        // 转换为本地时间
+        std::tm* local_time = std::localtime(&current_time);
+        
+        // 格式化时间字符串
+        char time_str[20];
+        std::strftime(time_str, sizeof(time_str), "%H:%M:%S", local_time);
+        doc["time"] = time_str;
+        std::string msg;
+        serializeJson(doc, msg);
+        MQTT::Publish("test2", msg);
+
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
+    }
+
+
     sensorGPS = new GPS(PIN_GPS_RX, PIN_GPS_TX);
     // sensorGPS->add_handler(task_GPS);
     // while(1){
@@ -146,8 +180,8 @@ extern "C" void app_main(void)
     //     demoLog.logI("GPS latitude: %.05f°N", gps_info.latitude);
     //     vTaskDelay(2000 / portTICK_PERIOD_MS);
     // }
-    
-    }
+
+
     // ultrasonic = new Ultrasonic(GPIO_NUM_4, GPIO_NUM_5);
     // while(1){
     //     demoLog.logI("Ultrasonic data: %s", ultrasonic->get_distance().data());

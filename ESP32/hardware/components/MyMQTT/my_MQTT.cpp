@@ -58,7 +58,7 @@ extern const char root_cert_auth_end[]   asm("_binary_AmazonRootCA1_pem_end");
  * initialize the value of MQTT class
 */
 std::map<const std::string, const MQTTSubscribeInfo_t> MQTT::map_subInfo;
-std::map<std::string, void(*)(const std::string topic, const std::string message)> MQTT::map_subTopic_callback;
+std::map<std::string, std::function<void(const std::string topic, const std::string message)>> MQTT::map_subTopic_callback;
 std::map<const uint16_t, MQTT::MQTT_subAckStatus_t> MQTT::map_subscribe_topicStatus;
 std::map<const uint16_t, const std::string> MQTT::map_unsubscribe_topic;
 
@@ -89,38 +89,70 @@ std::string MQTT::MQTT_keep_alive_task_name = "MQTT_keep_alive";
 
 uint32_t MQTT::process_timeout = MQTT_PROCESS_LOOP_TIMEOUT_MS;
 
+//Mutex
 SemaphoreHandle_t MQTT::mutex_MQTT_info_conn;
 SemaphoreHandle_t MQTT::mutex_map_subscribe_topicStatus;
 SemaphoreHandle_t MQTT::mutex_map_outgoingPublishPackets;
+SemaphoreHandle_t MQTT::mutex_map_subTopic_callback;
+SemaphoreHandle_t MQTT::mutex_map_subInfo;
 StaticSemaphore_t MQTT::xTlsContextSemaphoreBuffer;
 
+/**
+ * @brief Array to keep the outgoing publish messages.
+ * These stored outgoing publish messages are kept until a successful ack
+ * is received.
+ */
 std::map<const uint16_t, MQTTPublishInfo_t> MQTT::map_outgoingPublishPackets;
+
+/**
+ * @brief Array to track the outgoing publish records for outgoing publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
 MQTTPubAckInfo_t MQTT::pOutgoingPublishRecords[ MQTT::OUTGOING_PUBLISH_BUFFER_SIZE];
+
+/**
+ * @brief Array to track the incoming publish records for incoming publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
 MQTTPubAckInfo_t MQTT::pIncomingPublishRecords[ MQTT::INCOMING_PUBLISH_BUFFER_SIZE ];
+
+/**
+ * @brief The network buffer must remain valid for the lifetime of the MQTT context.
+ */
 uint8_t MQTT::buffer[ NETWORK_BUFFER_SIZE ];
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-void MQTT::Init(int argc, char ** argv){
+/**
+ * @brief Init the MQTT environment for connection and other functions. And register the handler for each MQTT event.
+ */
+void MQTT::Init(){
     if(!MQTT::isInit){
         MQTT::isInit = true;
         MQTT::MQTTLog.logI("Start initialize the MQTT moduel.");
         MQTT::mutex_MQTT_info_conn = xSemaphoreCreateMutex();
         MQTT::mutex_map_subscribe_topicStatus = xSemaphoreCreateMutex();
         MQTT::mutex_map_outgoingPublishPackets = xSemaphoreCreateMutex();
+        MQTT::mutex_map_subInfo = xSemaphoreCreateMutex();
+        MQTT::mutex_map_subTopic_callback = xSemaphoreCreateMutex();
         // MQTT::mutex_map_subTopic = xSemaphoreCreateMutex();
         if(MQTT::mutex_MQTT_info_conn == NULL ||
            MQTT::mutex_map_subscribe_topicStatus == NULL ||
+           MQTT::mutex_map_subTopic_callback == NULL ||
+           MQTT::mutex_map_subInfo == NULL ||
            MQTT::mutex_map_outgoingPublishPackets == NULL){
 
             MQTT::MQTTLog.logE("There is no more memory for mutex.");
         }
 
         struct timespec tp;
-
-        (void) argc;
-        (void) argv;
 
         /* Seed pseudo random number generator (provided by ISO C standard library) for
         * use by retry utils library when retrying failed network operations. */
@@ -137,15 +169,15 @@ void MQTT::Init(int argc, char ** argv){
             xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
         }
 
+        xEventGroupSetBits(MyEventLoop::smartBin_event_group(), MQTT_START);
+
         MyEventLoop::smartBin_handler_register(smartBin_event_t::WIFI_CONFIG_DONE,  MQTT::MQTT_wifi_done_handler,               NULL);
-        MyEventLoop::smartBin_handler_register(smartBin_event_t::WIFI_DISCONNECT,   MQTT::MQTT_wifi_disconnect_handler,         NULL);
         MyEventLoop::smartBin_handler_register(smartBin_event_t::MQTT_SUB_BACK,     MQTT::MQTT_subBack_event_handler,           NULL);
         MyEventLoop::smartBin_handler_register(smartBin_event_t::MQTT_PUBLISH,      MQTT::MQTT_publish_event_handler,           NULL);
         MyEventLoop::smartBin_handler_register(smartBin_event_t::MQTT_PUBACK,       MQTT::MQTT_publish_back_event_handler,      NULL);
         MyEventLoop::smartBin_handler_register(smartBin_event_t::MQTT_UNSUBACK,     MQTT::MQTT_unsubscribe_back_event_handler,  NULL);
         MyEventLoop::smartBin_handler_register(smartBin_event_t::MQTT_UNKNOWN,      MQTT::MQTT_event_handler,                   NULL);
-
-        xEventGroupSetBits(MyEventLoop::smartBin_event_group(), MQTT_START);
+        
     }
 }
 
@@ -158,17 +190,6 @@ void MQTT::MQTT_wifi_done_handler(void *handlerArg, esp_event_base_t base, int32
     xEventGroupWaitBits(MyEventLoop::smartBin_event_group(), MQTT_START, pdFALSE, pdFALSE, portMAX_DELAY);
     
     xTaskCreate(MQTT::task_connect, "MQTT_connect", 4096, NULL, 1, NULL);
-}
-
-/*-----------------------------------------------------------*/
-
-void MQTT::MQTT_wifi_disconnect_handler(void *handlerArg, esp_event_base_t base, int32_t id, void *event_data){
-    MQTT::MQTTLog.logI("WIFI has been disconnected.");
-    MQTT::isHaveConn = false;
-
-    MQTT::disconnect();
-    
-    return;
 }
 
 /*-----------------------------------------------------------*/
@@ -189,7 +210,7 @@ void MQTT::task_connect(void *parameters){
             vTaskDelay(pdMS_TO_TICKS(5000));
         }
 
-        /* Process all the subscribetion
+        /* -- Process all the subscribetion --
          * Here must create a new task to resubscribe. Because this function need to ensure
          * that all the subscribetion has been established successfully, it will wait for the SUBACK event.
          * However, SUBACK will be blocked because this MQTT::MQTT_wifi_done_handler haven't finished,
@@ -199,17 +220,20 @@ void MQTT::task_connect(void *parameters){
         /* Update the flag to indicate that an MQTT client session is saved.
          * Once this flag is set, MQTT connect in the following iterations of
          * this demo will be attempted without requesting for a clean session. */
-        MQTT::MQTT_info_conn.clientSessionPresent = true;
-
-
-        printf("MQTT subscribetion num: %d\n", MQTT::map_subInfo.size());
-        printf("MQTT subscribetion callback num: %d\n", MQTT::map_subTopic_callback.size());
-        printf("MQTT subscribetion back num: %d\n", MQTT::map_subscribe_topicStatus.size());
+        if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
+            MQTT::MQTT_info_conn.clientSessionPresent = true;
+            xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
+        }
 
         /* Check if session is present and if there are any outgoing publishes
          * that need to resend. This is only valid if the broker is
          * re-establishing a session which was already present. */
-        if(MQTT::MQTT_info_conn.brokerSessionPresent == true){
+        bool brokerSessionPresent = false;
+        if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
+            brokerSessionPresent = MQTT::MQTT_info_conn.brokerSessionPresent;
+            xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
+        }
+        if( brokerSessionPresent == true){
             MQTT::MQTTLog.logI("An MQTT session with broker is re-established. Resending unacked publishes.");
             
             /*Process all the resend of publish messages.*/
@@ -239,21 +263,20 @@ void MQTT::task_connect(void *parameters){
 void MQTT::task_MQTT_keep_alive(void *parameters){
     MQTT::MQTTLog.logI("Start MQTT keep alive task.");
     uint8_t attempt = 0;
-    const uint8_t max_attempt = 3;
-    bool isAttempt = false;
+    const uint8_t max_attempt = 10;
     MQTT::isHaveAliveTask = true;
     do {
-        
-        MQTT::MQTT_Status = MQTT_ProcessLoop( &(MQTT::MQTT_info_conn.mqttContext) );
+        if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
+            MQTT::MQTT_Status = MQTT_ProcessLoop( &(MQTT::MQTT_info_conn.mqttContext) );
+            xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
+        }
         // MQTT::MQTTLog.logI("Try to keep MQTT connection alive.");
 
         if((MQTT::MQTT_Status == MQTTSuccess) || (MQTT::MQTT_Status == MQTTNeedMoreBytes)){
             xEventGroupSetBits(MyEventLoop::smartBin_event_group(), MQTT_INIT);
-            isAttempt = false;
             attempt = 0;
         }
         else{
-            isAttempt = true;
             if(attempt < max_attempt){
                 MQTT::MQTTLog.logE("Something wrong with MQTT connection. Here is the error code: %s, trying once more...", MQTT_Status_strerror(MQTT::MQTT_Status));
                 xEventGroupClearBits(MyEventLoop::smartBin_event_group(), MQTT_INIT);
@@ -288,11 +311,21 @@ void MQTT::MQTT_event_handler(void *handlerArg, esp_event_base_t base, int32_t i
     }
 }
 
-/*----------------------------------------------------------*/
-
+/**
+ * @brief Function to update variable globalSubAckStatus with status
+ * information from Subscribe ACK. Called by eventCallback after processing
+ * incoming subscribe echo.
+ *
+ * @param[in] handlerArg    It's to provide some variables. Here it's NULL.
+ * @param[in] base          It's to provide some variables. Here it's SMARTBIN_EVENT_BASE.
+ * @param[in] id            It's to provide some variables. Here it's MQTT_SUB_BACK
+ * @param[in] *event_data   It's provided by the event caller. Here it's MQTT::MQTT_callback_t type.
+ * 
+ * @return void
+ */
 void MQTT::MQTT_subBack_event_handler( void *handlerArg, esp_event_base_t base, int32_t id, void *event_data ){
     MQTT_callback_t* info_callback = (MQTT_callback_t*) event_data;
-    MQTT::MQTTLog.logE("Get an MQTT subBack event. The packet type is %s, packetID: %d", info_callback->pPacketInfo->type == MQTT_PACKET_TYPE_SUBACK ? "SUBACK" : "UNKNOW", info_callback->packetIdentifier);
+    MQTT::MQTTLog.logW("Get an MQTT subBack event. The packet type is %s, packetID: %d", info_callback->pPacketInfo->type == MQTT_PACKET_TYPE_SUBACK ? "SUBACK" : "UNKNOW", info_callback->packetIdentifier);
     // MQTTPacketInfo_t *pPacketInfo = info_callback->pPacketInfo;
     uint16_t packetId = info_callback->packetIdentifier;
 
@@ -306,7 +339,7 @@ void MQTT::MQTT_subBack_event_handler( void *handlerArg, esp_event_base_t base, 
     assert( mqttStatus == MQTTSuccess );
     // The server must send a response code for each topic filter in the
     // original SUBSCRIBE packet.
-    MQTT::MQTTLog.logW("Subscribed packet back. the num of pCode is %d", pSize);
+    MQTT::MQTTLog.logI("Subscribed packet back. the num of pCode is %d", pSize);
 
     // set the status of the topic
     MQTTSubAckStatus_t status = (MQTTSubAckStatus_t) payload[0];
@@ -326,13 +359,9 @@ void MQTT::MQTT_subBack_event_handler( void *handlerArg, esp_event_base_t base, 
 
     if(status != MQTTSubAckFailure){
         if(xSemaphoreTake(MQTT::mutex_map_subscribe_topicStatus, portMAX_DELAY) == pdTRUE){
-            MQTT::MQTTLog.logI("Subscribed to the MQTT topic %s - with maximum QOS: %s", MQTT::map_subscribe_topicStatus[packetId].topic.c_str(), status_str.c_str());
-            MQTT::MQTTLog.logE("map_subscribe_topicstatus size : %d", MQTT::map_subscribe_topicStatus.size());
+            MQTT::MQTTLog.logI("Subscribed to the MQTT topic < %s > - with maximum QOS: %s", MQTT::map_subscribe_topicStatus[packetId].topic.c_str(), status_str.c_str());
+
             MQTT::map_subscribe_topicStatus.erase(packetId);
-            MQTT::MQTTLog.logE("map_subscribe_topicstatus size : %d", MQTT::map_subscribe_topicStatus.size());
-            for(auto it = MQTT::map_subscribe_topicStatus.begin(); it != MQTT::map_subscribe_topicStatus.end(); it++){
-                MQTT::MQTTLog.logE("map_subscribe_topicstatus key : %d", it->first);
-            }
 
             xSemaphoreGive(MQTT::mutex_map_subscribe_topicStatus);
         }
@@ -362,51 +391,63 @@ void MQTT::MQTT_publish_event_handler(void *handlerArg, esp_event_base_t base, i
 
     MQTT::MQTTLog.logW("Get an MQTT publish event. The packet topic is < %s >, packetID: %d", topicName.c_str(), packetIdentifier);
 
-    if(map_subTopic_callback.count(topicName) > 0){
-        MQTT::MQTTLog.logI("Incoming Publish Topic Name: %.*s. Incoming Publish QOS: %d\t"
-                   "Incoming Publish message Packet Id is %u.\t"
-                   "Incoming Publish Message : %.*s.\n\n",
-                   topicName.length(),
-                   topicName.c_str(),
-                   pPublishInfo->qos,
-                   packetIdentifier,
-                   message.length(),
-                   message.c_str()
-                   );
+    if(xSemaphoreTake(MQTT::mutex_map_subTopic_callback, portMAX_DELAY) == pdTRUE){
+        if(map_subTopic_callback.count(topicName) > 0){
+            MQTT::MQTTLog.logI("Incoming Publish Topic Name: <%.*s >. Incoming Publish QOS: %d\t"
+                    "Incoming Publish message Packet Id is %u.\t"
+                    "Incoming Publish Message : %.*s.\n\n",
+                    topicName.length(),
+                    topicName.c_str(),
+                    pPublishInfo->qos,
+                    packetIdentifier,
+                    message.length(),
+                    message.c_str()
+                    );
 
-        // call the callback function provided by the user
-        MQTT::map_subTopic_callback[topicName](topicName, message);
+            // call the callback function provided by the user
+            MQTT_incoming_packet_t *task_info = new MQTT_incoming_packet_t{
+                .topicName = topicName,
+                .msg = message,
+                .user_callback = MQTT::map_subTopic_callback[topicName]
+            };
 
-    }
-    else{
-        MQTT::MQTTLog.logE("The Incoming Publish Topic Name: %.*s is not subscribed.",
-                   topicName.length(),
-                   topicName.c_str()
-                   );
+            xSemaphoreGive(MQTT::mutex_map_subTopic_callback);
+
+            xTaskCreate(MQTT::task_run_user_callback, "Incoming callback", 1024 * 4, (void*)task_info, 1, NULL);
+            // MQTT::map_subTopic_callback[topicName](topicName, message);
+
+        }
+        else{
+            MQTT::MQTTLog.logE("The Incoming Publish Topic Name: < %.*s > is not subscribed.\n\n",
+                    topicName.length(),
+                    topicName.c_str()
+                    );
+        }
     }
 
 }
 
-/*-----------------------------------------------------------*/
+void MQTT::task_run_user_callback(void *parameters){
+    MQTT_incoming_packet_t *task_info = (MQTT_incoming_packet_t *)parameters;
 
-// void MQTT::task_user_callback(void *parameters){
-//     MQTT::MQTT_user_callbackInfo_t *callbackInfo = (MQTT::MQTT_user_callbackInfo_t *) parameters;
-//     const std::string topicName = callbackInfo->topicName;
-//     const std::string message = callbackInfo->message;
+    task_info->user_callback(task_info->topicName, task_info->msg);
 
-//     MQTT::map_subTopic_callback[topicName](topicName, message);
-
-//     delete callbackInfo;
-//     vTaskDelete(NULL);
-// }
-
-/*-----------------------------------------------------------*/
+    delete task_info;
+    vTaskDelete(NULL);
+}
 
 void MQTT::MQTT_publish_back_event_handler(void *handlerArg, esp_event_base_t base, int32_t eventId, void *event_data){
     MQTT_callback_t *info_callback = (MQTT_callback_t *) event_data;
     uint16_t packetId = info_callback->packetIdentifier;
 
-    MQTT::MQTTLog.logI("Publish ack received for packet id %u.", packetId);
+    if(xSemaphoreTake(MQTT::mutex_map_outgoingPublishPackets, portMAX_DELAY) == pdTRUE){
+        std::string topicName = MQTT::map_outgoingPublishPackets[packetId].pTopicName;
+        topicName[MQTT::map_outgoingPublishPackets[packetId].topicNameLength];
+
+        MQTT::MQTTLog.logI("Publish ack received for packet id %u, topic: < %s >\n", packetId, topicName.c_str());
+
+        xSemaphoreGive(MQTT::mutex_map_outgoingPublishPackets);
+    }
     
     /* Cleanup publish packet when a publish ack is received. */
     MQTT::MQTTLog.logI( "Cleaned up outgoing publish packet with packet id %u.\n\n", packetId);
@@ -425,7 +466,7 @@ void MQTT::MQTT_unsubscribe_back_event_handler(void *handlerArg, esp_event_base_
     uint16_t packetId = info_callback->packetIdentifier;
     std::string topic = MQTT::map_unsubscribe_topic[packetId];
 
-    MQTT::MQTTLog.logI("Unsubscribed from the topic %s.\n\n", topic.c_str());
+    MQTT::MQTTLog.logI("Unsubscribed from the topic < %s >.\n\n", topic.c_str());
     //after unsubscribed, remove all topics and callbacks from the map
     if(topic[0] != '|'){
         MQTT::map_subInfo.erase(topic);
@@ -439,8 +480,15 @@ void MQTT::MQTT_unsubscribe_back_event_handler(void *handlerArg, esp_event_base_
     }
 }
 
-/*-----------------------------------------------------------*/
-
+/**
+ * @brief Initializes the MQTT library.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] pNetworkContext The network context pointer.
+ *
+ * @return EXIT_SUCCESS if the MQTT library is initialized;
+ * EXIT_FAILURE otherwise.
+ */
 int MQTT::initializeMqtt(MQTTContext_t * pMqttContext, NetworkContext_t * pNetworkContext){
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -492,8 +540,14 @@ int MQTT::initializeMqtt(MQTTContext_t * pMqttContext, NetworkContext_t * pNetwo
     return returnStatus;
 }
 
-/*-----------------------------------------------------------*/
-
+/**
+ * @brief The application callback function for getting the incoming publish
+ * and incoming acks reported from MQTT library.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] pPacketInfo Packet Info pointer for the incoming packet.
+ * @param[in] pDeserializedInfo Deserialized information from the incoming packet.
+ */
 void MQTT::coreMQTT_EventCallback( MQTTContext_t * pMqttContext, MQTTPacketInfo_t * pPacketInfo, MQTTDeserializedInfo_t * pDeserializedInfo ){
     uint16_t packetIdentifier;
 
@@ -540,33 +594,6 @@ void MQTT::coreMQTT_EventCallback( MQTTContext_t * pMqttContext, MQTTPacketInfo_
                                            sizeof(info_callback)
                                            + info_callback->pPacketInfo_length,
                                            portMAX_DELAY);
-
-                // /* A SUBACK from the broker, containing the server response to our subscription request, has been received.
-                //  * It contains the status code indicating server approval/rejection for the subscription to the single topic
-                //  * requested. The SUBACK will be parsed to obtain the status code, and this status code will be stored in global
-                //  * variable globalSubAckStatus. */
-                // MQTT::updateSubAckStatus( pPacketInfo );
-
-                // /* Check status of the subscription request. If globalSubAckStatus does not indicate
-                //  * server refusal of the request (MQTTSubAckFailure), it contains the QoS level granted
-                //  * by the server, indicating a successful subscription attempt. */
-                // if( MQTT::globalSubAckStatus != MQTTSubAckFailure ){
-
-                //     /**
-                //      * @todo post an event to the handler
-                //     */
-                   
-
-                //     // MQTTLog.logI( ( "Subscribed to the topic %.*s. with maximum QoS %u.\n\n",
-                //     //            MQTT_EXAMPLE_TOPIC,
-                //     //            globalSubAckStatus ) );
-                // }
-
-                // /* Make sure ACK packet identifier matches with Request packet identifier. */
-                // assert( MQTT::globalSubscribePacketIdentifier == packetIdentifier );
-
-                // /* Update the global ACK packet identifier. */
-                // globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_UNSUBACK:
@@ -578,22 +605,9 @@ void MQTT::coreMQTT_EventCallback( MQTTContext_t * pMqttContext, MQTTPacketInfo_
                                            sizeof(info_callback)
                                            + info_callback->pPacketInfo_length,
                                            portMAX_DELAY );
-                // LogInfo( ( "Unsubscribed from the topic %.*s.\n\n",
-                //            MQTT_EXAMPLE_TOPIC_LENGTH,
-                //            MQTT_EXAMPLE_TOPIC ) );
-                // /* Make sure ACK packet identifier matches with Request packet identifier. */
-                // assert( globalUnsubscribePacketIdentifier == packetIdentifier );
-
-                // /* Update the global ACK packet identifier. */
-                // globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             case MQTT_PACKET_TYPE_PINGRESP:
-
-                // MyEventLoop::post_event_to(smartBin_event_t::MQTT_PINGRESP,
-                //                            NULL,
-                //                            0,
-                //                            portMAX_DELAY );
 
                 /* Nothing to be done from application as library handles
                  * PINGRESP. */
@@ -607,13 +621,6 @@ void MQTT::coreMQTT_EventCallback( MQTTContext_t * pMqttContext, MQTTPacketInfo_
                                            sizeof(info_callback)
                                            + info_callback->pPacketInfo_length,
                                            portMAX_DELAY);
-                // LogInfo( ( "PUBACK received for packet id %u.\n\n",
-                //            packetIdentifier ) );
-                // /* Cleanup publish packet when a PUBACK is received. */
-                // cleanupOutgoingPublishWithPacketID( packetIdentifier );
-
-                // /* Update the global ACK packet identifier. */
-                // globalAckPacketIdentifier = packetIdentifier;
                 break;
 
             /* Any other packet type is invalid. */
@@ -623,16 +630,28 @@ void MQTT::coreMQTT_EventCallback( MQTTContext_t * pMqttContext, MQTTPacketInfo_
                                            0,
                                            portMAX_DELAY);
                 break;
-                // LogError( ( "Unknown packet type received:(%02x).\n\n",
-                //             pPacketInfo->type ) );
         }
     }
 
     delete info_callback;
 }
 
-/*-----------------------------------------------------------*/
-
+/**
+ * @brief Connect to MQTT broker with reconnection retries.
+ *
+ * If connection fails, retry is attempted after a timeout.
+ * Timeout value will exponentially increase until maximum
+ * timeout value is reached or the number of attempts are exhausted.
+ *
+ * @param[out] pNetworkContext The output parameter to return the created network context.
+ * @param[out] pMqttContext The output to return the created MQTT context.
+ * @param[in,out] pClientSessionPresent Pointer to flag indicating if an
+ * MQTT session is present in the client.
+ * @param[out] pBrokerSessionPresent Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
+ *
+ * @return EXIT_FAILURE on failure; EXIT_SUCCESS on successful connection.
+ */
 int MQTT::connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext, MQTTContext_t * pMqttContext, bool * pClientSessionPresent, bool * pBrokerSessionPresent ){
     int returnStatus = EXIT_SUCCESS;
     BackoffAlgorithmStatus_t backoffAlgStatus = BackoffAlgorithmSuccess;
@@ -727,10 +746,9 @@ int MQTT::connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext,
 
 void MQTT::Publish(std::string topic, std::string message){
     xEventGroupWaitBits(MyEventLoop::smartBin_event_group(), MQTT_INIT, pdFALSE, pdFALSE, portMAX_DELAY);
+    uint16_t current_id = 0;
 
     assert( &(MQTT::MQTT_info_conn.mqttContext) != NULL );
-    int returnStatus = EXIT_SUCCESS;
-    uint16_t current_id = 0;
 
     // // /* Get the next free index for the outgoing publish. All QoS1 outgoing
     // //  * publishes are stored until a PUBACK is received. These messages are
@@ -741,36 +759,45 @@ void MQTT::Publish(std::string topic, std::string message){
     // MQTT::MQTTLog.logI("Get index: %d", index);
 
     MQTTStatus_t mqttStatus = MQTTSuccess;
-    if( MQTT::map_outgoingPublishPackets.size() < MQTT::MAX_OUTGOING_PUBLISHES){
-        MQTTPublishInfo_t pubInfo = {
-            .qos = AWS_IOT_MQTT_QOS,
-            .retain = false,
-            .pTopicName = topic.data(),
-            .topicNameLength = (uint16_t) topic.length(),
-            .pPayload = message.data(),
-            .payloadLength = message.length()
-        };
-
-        /* Get a new packet id. */
-        uint16_t packetId = MQTT_GetPacketId( &(MQTT::MQTT_info_conn.mqttContext) );
-        current_id = packetId;
-
-        if(xSemaphoreTake(MQTT::mutex_map_outgoingPublishPackets, portMAX_DELAY) == pdTRUE){
-            
-
-            MQTT::map_outgoingPublishPackets.insert(std::pair<uint16_t, MQTTPublishInfo_t>(packetId, pubInfo));
-            
+    if(xSemaphoreTake(MQTT::mutex_map_outgoingPublishPackets, portMAX_DELAY) == pdTRUE){
+        if( MQTT::map_outgoingPublishPackets.size() < MQTT::MAX_OUTGOING_PUBLISHES){
             xSemaphoreGive(MQTT::mutex_map_outgoingPublishPackets);
+            MQTTPublishInfo_t pubInfo = {
+                .qos = AWS_IOT_MQTT_QOS,
+                .retain = false,
+                .pTopicName = topic.data(),
+                .topicNameLength = (uint16_t) topic.length(),
+                .pPayload = message.data(),
+                .payloadLength = message.length()
+            };
+
+            /* Get a new packet id. */
+            uint16_t packetId = 0;
+            if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
+                packetId = MQTT_GetPacketId( &(MQTT::MQTT_info_conn.mqttContext) );
+                
+                mqttStatus = MQTT_Publish( &(MQTT::MQTT_info_conn.mqttContext), &pubInfo, packetId );
+                xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
+                
+                current_id = packetId;
+                if(xSemaphoreTake(MQTT::mutex_map_outgoingPublishPackets, portMAX_DELAY) == pdTRUE){
+
+                    MQTT::map_outgoingPublishPackets.insert(std::pair<uint16_t, MQTTPublishInfo_t>(packetId, pubInfo));
+                    
+                    xSemaphoreGive(MQTT::mutex_map_outgoingPublishPackets);
+                }
+
+
+            }
         }
-
-        mqttStatus = MQTT_Publish( &(MQTT::MQTT_info_conn.mqttContext), &pubInfo, packetId );
+        else {
+            xSemaphoreGive(MQTT::mutex_map_outgoingPublishPackets);
+            mqttStatus = MQTTSendFailed;
+        }
     }
-    else mqttStatus = MQTTSendFailed;
-
-    
 
     if( mqttStatus != MQTTSuccess ) {
-        MQTT::MQTTLog.logE("Failed to publish message. From MQTT::Publish, with error code %s", MQTT_Status_strerror(mqttStatus));
+        MQTT::MQTTLog.logE("Failed to publish message. From MQTT::Publish, with error code %s\n\n", MQTT_Status_strerror(mqttStatus));
 
         // MQTT::cleanupOutgoingPublishAt( current_id );
         if(xSemaphoreTake(MQTT::mutex_map_outgoingPublishPackets, portMAX_DELAY) == pdTRUE){
@@ -779,7 +806,7 @@ void MQTT::Publish(std::string topic, std::string message){
         }
     }
     else{
-        MQTT::MQTTLog.logI("Publish message with topic %s to broker with packet ID: %u", topic.c_str(), current_id);
+        MQTT::MQTTLog.logI("Publish message to topic < %s > to broker with packet ID: %u\n\n", topic.c_str(), current_id);
 
     }
 
@@ -804,27 +831,37 @@ void MQTT::publish_resend(){
      * through for the associated packet ID. If the application requires
      * increased efficiency in the look up of the packet ID, then a hashmap of
      * packetId key and PublishPacket_t values may be used instead. */
-    packetIdToResend = MQTT_PublishToResend( &MQTT::MQTT_info_conn.mqttContext, &cursor );
+    if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
+        packetIdToResend = MQTT_PublishToResend( &MQTT::MQTT_info_conn.mqttContext, &cursor );
+        xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
+    }
 
     while( packetIdToResend != MQTT_PACKET_ID_INVALID ){
         foundPacketId = MQTT::map_outgoingPublishPackets.contains(packetIdToResend);
 
         if(foundPacketId){
             MQTT::MQTTLog.logI("Sending duplicate PUBLISH with packet id %u.", packetIdToResend);
-            mqttStatus = MQTT_Publish( &MQTT::MQTT_info_conn.mqttContext,
-                                        &MQTT::map_outgoingPublishPackets[packetIdToResend],
-                                        packetIdToResend );
 
-            if( mqttStatus != MQTTSuccess ){
-                MQTT::MQTTLog.logE("Sending duplicate PUBLISH for packet id %u failed with status %s.", packetIdToResend, MQTT_Status_strerror( mqttStatus ));
+            if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
+                
+                mqttStatus = MQTT_Publish( &MQTT::MQTT_info_conn.mqttContext,
+                                            &MQTT::map_outgoingPublishPackets[packetIdToResend],
+                                            packetIdToResend );
+
+
+                if( mqttStatus != MQTTSuccess ){
+                    MQTT::MQTTLog.logE("Sending duplicate PUBLISH for packet id %u failed with status %s.", packetIdToResend, MQTT_Status_strerror( mqttStatus ));
+                    xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
                     break;
-            }
-            else{
-                MQTT::MQTTLog.logI("Sent duplicate PUBLISH successfully for packet id %u.\n\n", packetIdToResend);
-            }
+                }
+                else{
+                    MQTT::MQTTLog.logI("Sent duplicate PUBLISH successfully for packet id %u.\n\n", packetIdToResend);
+                }
 
-            /* Get the next packetID to be resent. */
-            packetIdToResend = MQTT_PublishToResend( &MQTT::MQTT_info_conn.mqttContext, &cursor );
+                /* Get the next packetID to be resent. */
+                packetIdToResend = MQTT_PublishToResend( &MQTT::MQTT_info_conn.mqttContext, &cursor );
+                xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
+            }
         }
         else{
             MQTT::MQTTLog.logE("Packet id %u requires resend, but was not found in outgoingPublishPackets.", packetIdToResend);
@@ -837,32 +874,37 @@ void MQTT::publish_resend(){
 
 /*-----------------------------------------------------------*/
 
-void MQTT::Subscribe(std::string topic, void (*callback)(const std::string topic, const std::string message)){
+void MQTT::Subscribe(std::string topic, std::function<void(const std::string topic, const std::string message)>callback){
     xEventGroupWaitBits(MyEventLoop::smartBin_event_group(), MQTT_INIT, pdFALSE, pdFALSE, portMAX_DELAY);
 
     assert( &(MQTT::MQTT_info_conn.mqttContext) != NULL );
+    
+    if(xSemaphoreTake(MQTT::mutex_map_subInfo, portMAX_DELAY) == pdTRUE){
+        if(MQTT::map_subInfo.count(topic) == 0 && MQTT::map_subInfo.size() < AWS_IOT_MQTT_MAX_SUBSCRIPTIONS){
 
-    if(MQTT::map_subTopic_callback.count(topic) == 0 && MQTT::map_subTopic_callback.size() < AWS_IOT_MQTT_MAX_SUBSCRIPTIONS){
-        MQTTStatus_t mqttStatus;
-        uint16_t packetId = 0;
+            MQTTStatus_t mqttStatus;
+            uint16_t packetId = 0;
 
-        MQTT::map_subTopic_callback.insert(std::pair<std::string, void (*)(const std::string topic, const std::string message)>(topic, callback));
-        MQTTSubscribeInfo_t pSubscription = {
-            .qos = AWS_IOT_MQTT_QOS,
-            .pTopicFilter = topic.c_str(),
-            .topicFilterLength = (uint16_t)topic.length()
-        };
-        
-        if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
-            packetId = MQTT_GetPacketId( &(MQTT::MQTT_info_conn.mqttContext) );
+            MQTTSubscribeInfo_t pSubscription = {
+                .qos = AWS_IOT_MQTT_QOS,
+                .pTopicFilter = topic.c_str(),
+                .topicFilterLength = (uint16_t)topic.length()
+            };
 
-            if(MQTT::map_subInfo.size() < AWS_IOT_MQTT_MAX_SUBSCRIPTIONS){
-                MQTT::map_subInfo.insert(std::pair<const std::string, const MQTTSubscribeInfo_t>(topic, pSubscription));
-                MQTT::MQTTLog.logI("Subscribing to the MQTT topic %s.", topic.c_str());
+            MQTT::map_subInfo.insert(std::pair<const std::string, const MQTTSubscribeInfo_t>(topic, pSubscription));
+            xSemaphoreGive(MQTT::mutex_map_subInfo);
+
+            if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
+                packetId = MQTT_GetPacketId( &(MQTT::MQTT_info_conn.mqttContext) );
+
+                
+                MQTT::MQTTLog.logI("Subscribing to the MQTT topic < %s >.", topic.c_str());
                 mqttStatus = MQTT_Subscribe( &(MQTT::MQTT_info_conn.mqttContext),
                                                         &pSubscription,
                                                         1,
                                                         packetId );
+
+                xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
 
                 MQTT::MQTT_subAckStatus_t status = {
                     .topic = topic,
@@ -875,23 +917,29 @@ void MQTT::Subscribe(std::string topic, void (*callback)(const std::string topic
                 }
 
                 if( mqttStatus != MQTTSuccess ){
-                    MQTT::MQTTLog.logE( "Failed to SUBSCRIBE to MQTT topic %s with error = %s", topic.c_str(), MQTT_Status_strerror( mqttStatus ) );
+                    MQTT::MQTTLog.logE( "Failed to SUBSCRIBE to MQTT topic < %s > with error = %s\n\n", topic.c_str(), MQTT_Status_strerror( mqttStatus ) );
                 }
                 else{
-                    MQTT::MQTTLog.logI( "SUBSCRIBE sent for the MQTT topic: %s to broker.\n", topic.c_str() );
+                    MQTT::MQTTLog.logI( "SUBSCRIBE sent for the MQTT topic: < %s > to broker.", topic.c_str() );
 
-                    // std::string task_name = topic + std::to_string((uint32_t) xTaskGetTickCount());
-                    // xTaskCreate(MQTT::task_sub_check_timeout, task_name.c_str(), 1024 * 3, (void*)&packetId, 1, NULL);
                     MQTT::task_sub_check_timeout(packetId);
+
+                    if(xSemaphoreTake(MQTT::mutex_map_subTopic_callback, portMAX_DELAY) == pdTRUE){
+                        MQTT::map_subTopic_callback.insert(std::pair<std::string, std::function<void(const std::string topic, const std::string message)>>(topic, callback));
+                        xSemaphoreGive(MQTT::mutex_map_subTopic_callback);
+                    }
                 }
+                
+                MQTT::MQTTLog.logI("Subscribe to < %s > done.\n\n", topic.c_str());
             }
-            xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
-            MQTT::MQTTLog.logI("Subscribe - %s - done.\n\n", topic.c_str());
+            
+        }
+        else{
+            xSemaphoreGive(MQTT::mutex_map_subInfo);
+            MQTT::MQTTLog.logE("The topic has been subscribed or Maximum number of subscriptions reached. You can just subscribe to %d topics!!\n\n", AWS_IOT_MQTT_MAX_SUBSCRIPTIONS);
         }
     }
-    else{
-        MQTT::MQTTLog.logE("The topic has been subscribed or Maximum number of subscriptions reached.");
-    }
+    
 
     return;
 
@@ -900,10 +948,6 @@ void MQTT::Subscribe(std::string topic, void (*callback)(const std::string topic
 /*-----------------------------------------------------------*/
 
 void MQTT::UnsubscribeFromTopic(std::string topic){
-    // if(!MQTT::isHaveConn) {
-    //     MQTT::MQTTLog.logE("There is no connection to the Internet. From MQTT::UnsubscribeFromTopic");
-    //     return;
-    // }
     xEventGroupWaitBits(MyEventLoop::smartBin_event_group(), MQTT_INIT, pdFALSE, pdFALSE, portMAX_DELAY);
 
     assert( &(MQTT::MQTT_info_conn.mqttContext) != NULL );
@@ -917,16 +961,16 @@ void MQTT::UnsubscribeFromTopic(std::string topic){
             packetId = MQTT_GetPacketId( &(MQTT::MQTT_info_conn.mqttContext) );
 
             if(MQTT::map_subInfo.size() > 0){
-                MQTT::MQTTLog.logI("Unsubscribing to the MQTT topic %s.", topic.c_str());
+                MQTT::MQTTLog.logI("Unsubscribing to the MQTT topic < %s >.", topic.c_str());
                 MQTTStatus_t mqttStatus = MQTT_Unsubscribe( &(MQTT::MQTT_info_conn.mqttContext),
                                                         &pSubscription,
                                                         1,
                                                         packetId );
                 if( mqttStatus != MQTTSuccess ){
-                    MQTT::MQTTLog.logE( "Failed to UNSUBSCRIBE to MQTT topic %s with error = %s", topic.c_str(), MQTT_Status_strerror( mqttStatus ) );
+                    MQTT::MQTTLog.logE( "Failed to UNSUBSCRIBE to MQTT topic < %s > with error = %s\n\n", topic.c_str(), MQTT_Status_strerror( mqttStatus ) );
                 }
                 else{
-                    MQTT::MQTTLog.logI( "UNSUBSCRIBE sent for the MQTT topic: %s to broker.\n", topic.c_str() );
+                    MQTT::MQTTLog.logI( "UNSUBSCRIBE sent for the MQTT topic: < %s > to broker.\n", topic.c_str() );
                     MQTT::map_unsubscribe_topic.insert(std::pair<const uint16_t, const std::string>(packetId, topic));
                 }
             }
@@ -935,7 +979,7 @@ void MQTT::UnsubscribeFromTopic(std::string topic){
         }
     }
     else{
-        MQTT::MQTTLog.logE("The topic has not been subscribed.");
+        MQTT::MQTTLog.logE("The topic has not been subscribed.\n\n");
     }
 
     return;
@@ -971,10 +1015,10 @@ void MQTT::UnsubscribeAllTopic(){
                                                     packetId );
             
             if( mqttStatus != MQTTSuccess ){
-                MQTT::MQTTLog.logE( "Failed to UNSUBSCRIBE to all MQTT topics with error = %s", MQTT_Status_strerror( mqttStatus ) );
+                MQTT::MQTTLog.logE( "Failed to UNSUBSCRIBE to all MQTT topics with error = %s\n\n", MQTT_Status_strerror( mqttStatus ) );
             }
             else{
-                MQTT::MQTTLog.logI( "UNSUBSCRIBE sent for all MQTT topics to broker.\nTopics: %s", unsub_topic_str.c_str() );
+                MQTT::MQTTLog.logI( "UNSUBSCRIBE sent for all MQTT topics to broker. Topics: < %s >", unsub_topic_str.c_str() );
                 MQTT::map_unsubscribe_topic.insert(std::pair<const uint16_t, const std::string>(packetId, unsub_topic_str));
             }
 
@@ -982,7 +1026,7 @@ void MQTT::UnsubscribeAllTopic(){
         }
     }
     else{
-        MQTT::MQTTLog.logE("No topic has been subscribed.");
+        MQTT::MQTTLog.logE("No topic has been subscribed.\n\n");
     }
 
     return;
@@ -1008,7 +1052,7 @@ void MQTT::task_sub_check_timeout(uint16_t packetId){
          * Attempts are made according to the exponential backoff retry strategy
          * implemented in retryUtils. */
         if(xSemaphoreTake(MQTT::mutex_map_subscribe_topicStatus, portMAX_DELAY) == pdTRUE){
-            MQTT::MQTTLog.logI("Server rejected subscription request. Attempting to resubscribe to topic %s", MQTT::map_subscribe_topicStatus[packetId].topic.c_str());
+            MQTT::MQTTLog.logW("Server rejected subscription request. Attempting to resubscribe to topic < %s >\n\n", MQTT::map_subscribe_topicStatus[packetId].topic.c_str());
             xSemaphoreGive(MQTT::mutex_map_subscribe_topicStatus);
         }
 
@@ -1016,10 +1060,8 @@ void MQTT::task_sub_check_timeout(uint16_t packetId){
     }
 
     if(returnStatus == EXIT_FAILURE){
-        MQTT::MQTTLog.logE("ERROR: Failed to subscribe to topic %s", MQTT::map_subscribe_topicStatus[packetId].topic.c_str());
+        MQTT::MQTTLog.logE("ERROR: Failed to subscribe to topic < %s >\n\n", MQTT::map_subscribe_topicStatus[packetId].topic.c_str());
     }
-
-    MQTT::MQTTLog.logW("packetId: %d, size: %d", packetId, MQTT::map_subscribe_topicStatus.size());
 
     
     return;
@@ -1030,14 +1072,18 @@ void MQTT::task_sub_check_timeout(uint16_t packetId){
 int MQTT::sub_timeout_check(uint16_t packetId){
     uint32_t ulMQTTProcessLoopEntryTime;
     uint32_t ulMQTTProcessLoopTimeoutTime;
-    uint32_t ulCurrentTime;
+    uint32_t ulCurrentTime = 0;
 
     int returnStatus = EXIT_FAILURE;
 
     bool targetExist = false;
 
-    MQTT::MQTTLog.logW("check timeout for packetId: %d", packetId);
-    ulCurrentTime = MQTT::MQTT_info_conn.mqttContext.getTime();
+    MQTT::MQTTLog.logI("check timeout for packetId: %d", packetId);
+
+    if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
+        ulCurrentTime = MQTT::MQTT_info_conn.mqttContext.getTime();
+        xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
+    }
     ulMQTTProcessLoopEntryTime = ulCurrentTime;
     ulMQTTProcessLoopTimeoutTime = ulCurrentTime + MQTT::process_timeout;
 
@@ -1052,7 +1098,10 @@ int MQTT::sub_timeout_check(uint16_t packetId){
             targetExist = MQTT::map_subscribe_topicStatus.contains(packetId);
             xSemaphoreGive(MQTT::mutex_map_subscribe_topicStatus);
         }
-        ulCurrentTime = MQTT::MQTT_info_conn.mqttContext.getTime();
+        if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
+            ulCurrentTime = MQTT::MQTT_info_conn.mqttContext.getTime();
+            xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
+        }
     }
 
     if(((MQTT::MQTT_Status != MQTTSuccess) && (MQTT::MQTT_Status != MQTTNeedMoreBytes)) || (targetExist)){
@@ -1073,7 +1122,7 @@ void MQTT::task_resubscribe_after_failed(void *parameters){
     xEventGroupWaitBits(MyEventLoop::smartBin_event_group(), MQTT_INIT, pdFALSE, pdFALSE, portMAX_DELAY);
     
     if(MQTT::map_subInfo.size() > 0){
-        MQTTSubscribeInfo_t pSubscription[MQTT::map_subInfo.size()];
+        MQTTSubscribeInfo_t *pSubscription = new MQTTSubscribeInfo_t[MQTT::map_subInfo.size()];;
         MQTTStatus_t mqttStatus = MQTTSuccess;
         std::string topic_str = "|";
         int i = 0;
@@ -1081,13 +1130,21 @@ void MQTT::task_resubscribe_after_failed(void *parameters){
         for(auto it = MQTT::map_subInfo.begin(); it != MQTT::map_subInfo.end(); it++){
 
             topic_str += it->first + "|";
-            pSubscription[i++] = it->second;
+            /* Here we must create a new instance for pSubscription, and can't just use MQTT::map_subInfo[topic]
+             * directly. Because the pointer of MQTT::map_subInfo[topic] may can not be used when out of the 
+             * definition area, it will cause some wrong thing and you can't get any error or wrong information
+             * in this situation.
+             **/
+            pSubscription[i++] = *new MQTTSubscribeInfo_t{
+                .qos = AWS_IOT_MQTT_QOS,
+                .pTopicFilter = it->first.c_str(),
+                .topicFilterLength = (uint16_t)it->first.length()
+            };
         }
         
 
         if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
             uint16_t packetId = MQTT_GetPacketId( &(MQTT::MQTT_info_conn.mqttContext) );
-
             
             MQTT::MQTTLog.logI("Resubscribing to the MQTT topic < %s > with packet ID: %d", topic_str.c_str(), packetId);
             mqttStatus = MQTT_Subscribe( &(MQTT::MQTT_info_conn.mqttContext),
@@ -1095,13 +1152,11 @@ void MQTT::task_resubscribe_after_failed(void *parameters){
                                                     map_subInfo.size(),
                                                     packetId );
 
-            MQTT::MQTT_subAckStatus_t status = {
-                .topic = topic_str,
-                .status = MQTTSubAckFailure
-            };
+            xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
+            
 
             if(xSemaphoreTake(MQTT::mutex_map_subscribe_topicStatus, portMAX_DELAY) == pdTRUE){
-                MQTT::map_subscribe_topicStatus.insert(std::pair<const uint16_t, MQTT::MQTT_subAckStatus_t>(packetId, status));
+                MQTT::map_subscribe_topicStatus.insert(std::pair<const uint16_t, MQTT::MQTT_subAckStatus_t>(packetId, MQTT::MQTT_subAckStatus_t{.topic = topic_str, .status = MQTTSubAckFailure}));
                 xSemaphoreGive(MQTT::mutex_map_subscribe_topicStatus);
             }
 
@@ -1111,29 +1166,24 @@ void MQTT::task_resubscribe_after_failed(void *parameters){
             else{
                 MQTT::MQTTLog.logI( "SUBSCRIBE sent for the MQTT topic: < %s > to broker with packet ID: %d.\n", topic_str.c_str(), packetId );
 
-                // std::string task_name = topic + std::to_string((uint32_t) xTaskGetTickCount());
-                // xTaskCreate(MQTT::task_sub_check_timeout, task_name.c_str(), 1024 * 3, (void*)&packetId, 1, NULL);
-                // int returnStatus = MQTT::waitForPacketAck_resub_failed(packetId);
-
-                // if(returnStatus == EXIT_SUCCESS && MQTT::map_subscribe_topicStatus[packetId].status == MQTTSubAckFailure){
-                //     MQTT::MQTTLog.logE("Server rejected subscription request. Attempting to resubscribe to topic < %s >.", MQTT::map_subscribe_topicStatus[packetId].topic.c_str());
-
-                //     returnStatus = MQTT::resubscribe(packetId);
-                // }
                 MQTT::task_sub_check_timeout(packetId);
             }
             
-            xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
-            MQTT::MQTTLog.logI("Resubscribe - %s - done.", topic_str.c_str());
+            MQTT::MQTTLog.logI("Resubscribe to < %s > done.\n\n", topic_str.c_str());
         }
+
+        delete[] pSubscription;
         
     }
     
     vTaskDelete(NULL);
 }
 
-/*-----------------------------------------------------------*/
-
+/**
+ * @brief   It'll be called when client failed to subscribe some topics.\n 
+ * @param  identifier       My Param doc
+ * @return int 
+ */
 int MQTT::resubscribe(const uint16_t identifier){
 
     xEventGroupWaitBits(MyEventLoop::smartBin_event_group(), MQTT_INIT, pdFALSE, pdFALSE, portMAX_DELAY);
@@ -1155,7 +1205,10 @@ int MQTT::resubscribe(const uint16_t identifier){
          * because this function is entered only after the receipt of a SUBACK, at which point
          * its associated packet id is free to use. */
         std::string re_topic = MQTT::map_subscribe_topicStatus[identifier].topic;
-        mqttStatus = MQTT_Subscribe( &(MQTT::MQTT_info_conn.mqttContext), &(MQTT::map_subInfo[re_topic]), 1, identifier );
+        if(xSemaphoreTake(MQTT::mutex_MQTT_info_conn, portMAX_DELAY) == pdTRUE){
+            mqttStatus = MQTT_Subscribe( &(MQTT::MQTT_info_conn.mqttContext), &(MQTT::map_subInfo[re_topic]), 1, identifier );
+            xSemaphoreGive(MQTT::mutex_MQTT_info_conn);
+        }
 
         if( mqttStatus != MQTTSuccess ){
             MQTT::MQTTLog.logE("Failed to resend SUBSCRIBE packet to broker with error = %s.", MQTT_Status_strerror( mqttStatus ) );
@@ -1163,7 +1216,7 @@ int MQTT::resubscribe(const uint16_t identifier){
             break;
         }
 
-        MQTT::MQTTLog.logI( "SUBSCRIBE sent for topic %s to broker.\n\n", re_topic.c_str() );
+        MQTT::MQTTLog.logI( "SUBSCRIBE sent for topic < %s > to broker.\n\n", re_topic.c_str() );
 
         /* Process incoming packet */
         returnStatus = MQTT::sub_timeout_check(identifier);
@@ -1198,29 +1251,19 @@ int MQTT::resubscribe(const uint16_t identifier){
     return returnStatus;
 }
 
-/*-----------------------------------------------------------*/
-
-// int MQTT::getNextFreeIndexForOutgoingPublishes(){
-//     uint8_t index = 0;
-//     bool need_break = false;
-//     for(index = 0; index < MQTT::MAX_OUTGOING_PUBLISHES; index++){
-//         if(xSemaphoreTake(MQTT::mutex_vector_outgoingPublishPackets, portMAX_DELAY) == pdTRUE){
-//             if( MQTT::outgoingPublishPackets[index].packetId == MQTT_PACKET_ID_INVALID ){
-//                 need_break = true;
-//             }
-
-//             xSemaphoreGive(MQTT::mutex_vector_outgoingPublishPackets);
-//         }
-
-//         if(need_break) break;
-//     }
-
-//     return index;
-// }
-
-
-/*-----------------------------------------------------------*/
-
+/**
+ * <pre>
+ * @brief Sends an MQTT CONNECT packet over the already connected TCP socket.
+ * @param[in]  pMqttContext     MQTT context pointer.
+ * @param[in]  createCleanSessionMy Creates a new MQTT session if true.
+ * If false, tries to establish the existing session if there was session
+ * already present in broker.
+ * @param[out]  pSessionPresent  Session was already present in the broker or not.
+ * Session present response is obtained from the CONNACK from broker.
+ * @return int EXIT_SUCCESS if an MQTT session is established;
+ * EXIT_FAILURE otherwise.
+ * </pre>
+ */
 int MQTT::establishMqttSession( MQTTContext_t * pMqttContext, bool createCleanSession, bool * pSessionPresent ){
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus;
@@ -1275,62 +1318,12 @@ int MQTT::establishMqttSession( MQTTContext_t * pMqttContext, bool createCleanSe
     return returnStatus;
 }
 
-/*-----------------------------------------------------------*/
-
-int MQTT::waitForPacketAck_resub_failed(uint16_t packetId){
-    uint32_t ulMQTTProcessLoopEntryTime;
-    uint32_t ulMQTTProcessLoopTimeoutTime;
-    uint32_t ulCurrentTime;
-
-    MQTTStatus_t eMqttStatus = MQTTSuccess;
-    int returnStatus = EXIT_FAILURE;
-
-    MQTT::MQTTLog.logW("check timeout for packetId: %d", packetId);
-    ulCurrentTime = MQTT::MQTT_info_conn.mqttContext.getTime();
-    ulMQTTProcessLoopEntryTime = ulCurrentTime;
-    ulMQTTProcessLoopTimeoutTime = ulCurrentTime + MQTT::process_timeout;
-
-    while( (MQTT::map_subscribe_topicStatus[packetId].status == MQTTSubAckFailure) && (ulCurrentTime < ulMQTTProcessLoopTimeoutTime) && (eMqttStatus == MQTTSuccess || eMqttStatus == MQTTNeedMoreBytes)){
-        eMqttStatus = MQTT_ProcessLoop(&MQTT::MQTT_info_conn.mqttContext);
-        ulCurrentTime = MQTT::MQTT_info_conn.mqttContext.getTime();
-    }
-
-    if(((eMqttStatus != MQTTSuccess) && (eMqttStatus != MQTTNeedMoreBytes)) || (MQTT::map_subscribe_topicStatus[packetId].status == MQTTSubAckFailure)){
-        MQTT::MQTTLog.logE("MQTT_ProcessLoop run by < %s > failed to receive ACK packet: Expected ACK Packet ID = %d, LoopDuration = %" PRIu32 " returned with status = %s", 
-        MQTT::map_subscribe_topicStatus[packetId].topic.c_str(),
-        packetId,
-        (ulCurrentTime - ulMQTTProcessLoopEntryTime),
-        MQTT_Status_strerror( MQTT::MQTT_Status ) );
-    }
-    else returnStatus = EXIT_SUCCESS;
-
-    return returnStatus;
-}
-
-/*-----------------------------------------------------------*/
-
-int MQTT::disconnect(){
-
-    MQTTStatus_t mqttStatus = MQTTSuccess;
-    int returnStatus = EXIT_SUCCESS;
-
-    assert( &MQTT::MQTT_info_conn.mqttContext != NULL );
-
-    /* Send DISCONNECT. */
-    mqttStatus = MQTT_Disconnect( &MQTT::MQTT_info_conn.mqttContext );
-
-    if( mqttStatus != MQTTSuccess )
-    {
-        LogError( ( "Sending MQTT DISCONNECT failed with status=%s.",
-                    MQTT_Status_strerror( mqttStatus ) ) );
-        returnStatus = EXIT_FAILURE;
-    }
-
-    return returnStatus;
-}
-
-/*-----------------------------------------------------------*/
-
+/**
+ * @brief The random number generator to use for exponential backoff with
+ * jitter retry logic.
+ *
+ * @return { uint32_t } The generated random number.
+ */
 uint32_t MQTT::generateRandomNumber(){
     return( (uint32_t)rand() );
 }

@@ -14,7 +14,6 @@
 
 enum class smartBin_event_t : int32_t{
     WIFI_CONFIG_DONE = 0,   //eventData: NULL
-    WIFI_DISCONNECT,
     MQTT_SUB_BACK,
     MQTT_PUBLISH,
     MQTT_UNSUBACK,

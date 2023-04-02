@@ -33,7 +33,6 @@ void MyEventLoop::init(){
 
 void MyEventLoop::post_event_to(smartBin_event_t eventId, const void *eventData, size_t eventDataSize, TickType_t ticksToWait){
     if(MyEventLoop::isInit){
-        MyEventLoop::eventLoopLog.logW("post event!");
         ESP_ERROR_CHECK(esp_event_post_to(MyEventLoop::smartBin_loop_handler, MyEventLoop::SMARTBIN_BASE, static_cast<int32_t>(eventId), eventData, eventDataSize, ticksToWait));
     }
     else{

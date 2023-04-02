@@ -159,7 +159,6 @@ void WiFi::run_on_event(void* handler_arg, esp_event_base_t base, int32_t id, vo
                     break;
                 case WIFI_EVENT_STA_DISCONNECTED:
                     do_disconnect();
-                    MyEventLoop::post_event_to(smartBin_event_t::WIFI_DISCONNECT, NULL, 0, portMAX_DELAY);
                     break;
                 default:
                     break;
