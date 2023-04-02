@@ -33,6 +33,7 @@ private:
     typedef struct
     {
         GPS_info_t GPS_info;
+        uint8_t *data;
         SemaphoreHandle_t mutex_data;
     } GPS_task_t;
 
@@ -55,7 +56,7 @@ private:
 
 public:
     GPS(uint32_t gpio_rx = UART_PIN_NO_CHANGE, uint32_t gpio_tx = UART_PIN_NO_CHANGE);
-    GPS_info_t get_location();
+    const GPS_info_t get_location();
     void add_handler(void(*handler)(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data));
     
 }; // GPS
@@ -78,7 +79,7 @@ private:
 
 public:
     Ultrasonic(gpio_num_t gpio_trigger, gpio_num_t gpio_echo);
-    std::string get_distance();
+    float get_distance();
 
     static void task_Ultrasonic(void *_dist);
 };
@@ -138,6 +139,8 @@ private:
 public:
     Led(gpio_num_t pin, gpio_mode_t mode);
     void toggle_led();
+    void led_lightUp();
+    void led_lightDown();
 };
 
 #endif

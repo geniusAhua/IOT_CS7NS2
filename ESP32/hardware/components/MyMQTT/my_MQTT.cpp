@@ -383,17 +383,16 @@ void MQTT::MQTT_publish_event_handler(void *handlerArg, esp_event_base_t base, i
 
     assert( pPublishInfo != NULL );
 
-    std::string topicName = pPublishInfo->pTopicName;
-    std::string message = (const char *)(pPublishInfo->pPayload);
-
-    topicName[pPublishInfo->topicNameLength] = '\0';
-    message[pPublishInfo->payloadLength] = '\0';
+    std::string topicName(pPublishInfo->pTopicName, pPublishInfo->topicNameLength);
+    std::string message((const char *)(pPublishInfo->pPayload), pPublishInfo->payloadLength);
+    //topicName[pPublishInfo->topicNameLength] = '\0';
+    //message[pPublishInfo->payloadLength] = '\0';
 
     MQTT::MQTTLog.logW("Get an MQTT publish event. The packet topic is < %s >, packetID: %d", topicName.c_str(), packetIdentifier);
 
     if(xSemaphoreTake(MQTT::mutex_map_subTopic_callback, portMAX_DELAY) == pdTRUE){
-        if(map_subTopic_callback.count(topicName) > 0){
-            MQTT::MQTTLog.logI("Incoming Publish Topic Name: <%.*s >. Incoming Publish QOS: %d\t"
+        if(map_subTopic_callback.contains(topicName)){
+            MQTT::MQTTLog.logI("Incoming Publish Topic Name: < %.*s >. Incoming Publish QOS: %d\t"
                     "Incoming Publish message Packet Id is %u.\t"
                     "Incoming Publish Message : %.*s.\n\n",
                     topicName.length(),
@@ -418,6 +417,7 @@ void MQTT::MQTT_publish_event_handler(void *handlerArg, esp_event_base_t base, i
 
         }
         else{
+            xSemaphoreGive(MQTT::mutex_map_subTopic_callback);
             MQTT::MQTTLog.logE("The Incoming Publish Topic Name: < %.*s > is not subscribed.\n\n",
                     topicName.length(),
                     topicName.c_str()
@@ -922,12 +922,13 @@ void MQTT::Subscribe(std::string topic, std::function<void(const std::string top
                 else{
                     MQTT::MQTTLog.logI( "SUBSCRIBE sent for the MQTT topic: < %s > to broker.", topic.c_str() );
 
-                    MQTT::task_sub_check_timeout(packetId);
-
                     if(xSemaphoreTake(MQTT::mutex_map_subTopic_callback, portMAX_DELAY) == pdTRUE){
                         MQTT::map_subTopic_callback.insert(std::pair<std::string, std::function<void(const std::string topic, const std::string message)>>(topic, callback));
+                        printf("topic: %s, is? %d\n", topic.c_str(), MQTT::map_subTopic_callback.contains(topic));
                         xSemaphoreGive(MQTT::mutex_map_subTopic_callback);
                     }
+                    MQTT::task_sub_check_timeout(packetId);
+
                 }
                 
                 MQTT::MQTTLog.logI("Subscribe to < %s > done.\n\n", topic.c_str());

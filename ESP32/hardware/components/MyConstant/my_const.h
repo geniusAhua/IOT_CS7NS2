@@ -15,9 +15,16 @@
 #define LOG_TAG_HUMITURE                            "SmartBin-Humiture"
 #define LOG_TAG_MQTT                                "SmartBin-MQTT"
 
+//SmartBin distance (cm)
+#define DISTANCE_NORMAL                             100
+#define DISTANCE_TENSIVE                            50
+#define DISTANCE_EMERGENCY                          10
+
 //MQTT
 #define AWS_IOT_ENDPOINT                            "a3ravxmuj0c4e2-ats.iot.eu-west-1.amazonaws.com"
 #define AWS_IOT_CLIENT_ID                           "SmartBin1"
+#define PUBLISH_TOPIC_SMARTBIN_INFO                 "SmartBinInfo"
+#define SUBSCRIBE_TOPIC1                            "control"
 #define AWS_IOT_ENDPOINT_LENGTH                     ( ( uint16_t ) sizeof( AWS_IOT_ENDPOINT ) - 1 )
 #define AWS_IOT_CLIENT_ID_LENGTH                    ( ( uint16_t ) sizeof( AWS_IOT_CLIENT_ID ) - 1 )
 #define AWS_IOT_MQTT_PORT                           8883
@@ -32,7 +39,7 @@
 #define MQTT_CONNECTION_RETRY_MAX_BACKOFF_DELAY_MS  ( 128000U )
 
 //System Configuration
-#define WIFI_SSID                                   "一起爬山吗"
+#define WIFI_SSID                                   "刘阿花的iPhone"
 #define WIFI_PWD                                    "qwertyuiop"
 #define WIFI_MAX_RETRY_NUM                          100
 #define NETWORK_BUFFER_SIZE                         1024
@@ -48,6 +55,7 @@
 #define TASK_NAME_GPS                               "GPS_TASK"
 #define TASK_NAME_ULTRASONIC                        "ULTRASONIC_TASK"
 #define TASK_NAME_HUMITURE                          "HUMITURE_TASK"
+#define TASK_NAME_PUBLISH_CYCLE                     "PUBLISH_CYCLE"
 
 //Configuration of PIN
 #define PIN_RED                                     GPIO_NUM_25
@@ -57,14 +65,10 @@
 #define PIN_GPS_TX                                  GPIO_NUM_22
 #define PIN_GPS_RX                                  GPIO_NUM_23
 #define OUTPUT_LEVEL                                ESP_LOG_VERBOSE
-
 #define PIN_ULTRASONIC_TRIGGER                      GPIO_NUM_4
 #define PIN_ULTRASONIC_ECHO                         GPIO_NUM_5
-
 #define PIN_SERVO                                   GPIO_NUM_19
-
 #define PIN_HUMITURE                                GPIO_NUM_21
-
 #define PIN_GREEN_LED                               GPIO_NUM_32
 
 // configuration of Servo

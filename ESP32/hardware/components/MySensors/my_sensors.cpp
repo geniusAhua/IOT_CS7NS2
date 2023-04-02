@@ -10,7 +10,6 @@
  * @note this a sensor class for GPS, just remember GPIO_rx pin need to connect to the tx pin on GPS sensors.
  */
 
-
 const uart_config_t GPS::uart_config = {
     .baud_rate = 9600,
     .data_bits = UART_DATA_8_BITS,
@@ -23,18 +22,35 @@ const int GPS::RX_BUFFER_SIZE = 1024;
 uint32_t GPS::interval = 1000 / portTICK_PERIOD_MS; // 1s
 MyLog GPS::GPSLog(LOG_TAG_SENSORS_GPS);
 
-const uint8_t GPS::TIME_ZONE = (+8);
+const uint8_t GPS::TIME_ZONE = (+1);
 const uint16_t GPS::YEAR_BASE = 2000;   //data in GPS starts from 2000
 
 
-GPS::GPS(uint32_t gpio_rx, uint32_t gpio_tx) : parameters{.mutex_data = xSemaphoreCreateMutex()}/*, GPS_config{.uart = {.uart_port = UART_NUM_2, .rx_pin = gpio_rx, .baud_rate = 9600, .data_bits = UART_DATA_8_BITS, .parity = UART_PARITY_DISABLE, .stop_bits = UART_STOP_BITS_1, .event_queue_size = 16}}, nmea_handler(nmea_parser_init(&GPS_config))*/
+GPS::GPS(uint32_t gpio_rx, uint32_t gpio_tx) : parameters{.mutex_data = xSemaphoreCreateMutex()}
 {
 
-    this->gpio_tx = gpio_tx == UART_PIN_NO_CHANGE ? GPIO_NUM_1 : gpio_tx;
-    this->gpio_rx = gpio_rx == UART_PIN_NO_CHANGE ? GPIO_NUM_3 : gpio_rx;
-    
-    this->GPS_config = NMEA_PARSER_CONFIG_DEFAULT();
+    //this->gpio_tx = gpio_tx == UART_PIN_NO_CHANGE ? GPIO_NUM_1 : gpio_tx;
+    //this->gpio_rx = gpio_rx == UART_PIN_NO_CHANGE ? GPIO_NUM_3 : gpio_rx;
+
+    this->GPS_config = {
+        .uart = {
+            .uart_port = UART_NUM_2, 
+            .rx_pin = gpio_rx, 
+            .baud_rate = 9600, 
+            .data_bits = UART_DATA_8_BITS, 
+            .parity = UART_PARITY_DISABLE, 
+            .stop_bits = UART_STOP_BITS_1, 
+            .event_queue_size = 16
+        }
+    };
     this->nmea_handler = nmea_parser_init(&this->GPS_config);
+
+    this->parameters.GPS_info = *new GPS_info_t;
+
+    nmea_parser_add_handler(this->nmea_handler, GPS::task_GPS, (void*)&this->parameters);
+    
+    //this->GPS_config = NMEA_PARSER_CONFIG_DEFAULT();
+    //this->nmea_handler = nmea_parser_init(&this->GPS_config);
     
 
     // // We won't use a buffer for sending data.
@@ -46,7 +62,6 @@ GPS::GPS(uint32_t gpio_rx, uint32_t gpio_tx) : parameters{.mutex_data = xSemapho
     // this->parameters.data = new uint8_t[GPS::RX_BUFFER_SIZE * 1 + 1];
     // memset(this->parameters.data, '\0', GPS::RX_BUFFER_SIZE * 1 + 1);
 
-    nmea_parser_add_handler(this->nmea_handler, GPS::task_GPS, NULL);
     // GPS::GPSLog.logI("Start a task to get the data from GPS sensor.");
     // xTaskCreate(&(GPS::task_GPS), TASK_NAME_GPS, 1024 * 4, (void *)&(this->parameters), 1, NULL);
 }
@@ -56,36 +71,34 @@ void GPS::add_handler(void(*handler)(void *event_handler_arg, esp_event_base_t e
 }
 
 void GPS::task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data){
-    // GPS_task_t *parameters = (GPS_task_t *)event_handler_arg;
+     GPS_task_t *parameters = (GPS_task_t *)event_handler_arg;
 
     gps_t *GPS_info = NULL;
     switch(event_id){
         case GPS_UPDATE:
             GPS_info = (gps_t *)event_data;
-            printf("%d/%d/%d %d:%d:%d => \r\n\t\t\t\t\t\tlatitude   = %.05f°N\r\n\t\t\t\t\t\tlongitude = %.05f°E\r\n\t\t\t\t\t\taltitude   = %.02fm\r\n\t\t\t\t\t\tspeed      = %fm/s\n",
+            printf("%d/%d/%d %d:%d:%d => \r\n\t\t\t\t\t\tlatitude   = %.09f°N\n",
                  GPS_info->date.year + YEAR_BASE, GPS_info->date.month, GPS_info->date.day,
                  GPS_info->tim.hour + TIME_ZONE, GPS_info->tim.minute, GPS_info->tim.second,
-                 GPS_info->latitude, GPS_info->longitude, GPS_info->altitude, GPS_info->speed);
+                 GPS_info->latitude);
 
-            // if (xSemaphoreTake(parameters->mutex_data, portMAX_DELAY) == pdTRUE){
-            //     parameters->GPS_info = * new GPS_info_t{
-            //         .altitude = GPS_info->altitude,
-            //         .latitude = GPS_info->latitude,
-            //         .longitude = GPS_info->longitude,
-            //         .year = GPS_info->date.year + GPS::YEAR_BASE,
-            //         .month = GPS_info->date.month,
-            //         .day = GPS_info->date.day,
-            //         .hour = GPS_info->tim.hour + GPS::TIME_ZONE,
-            //         .minute = GPS_info->tim.minute,
-            //         .second = GPS_info->tim.second
-            //     };
+             if (xSemaphoreTake(parameters->mutex_data, portMAX_DELAY) == pdTRUE){
+                 parameters->GPS_info = * new GPS_info_t{
+                     .altitude = GPS_info->altitude,
+                     .latitude = GPS_info->latitude,
+                     .longitude = GPS_info->longitude,
+                     .year = GPS_info->date.year + GPS::YEAR_BASE,
+                     .month = GPS_info->date.month,
+                     .day = GPS_info->date.day,
+                     .hour = GPS_info->tim.hour + GPS::TIME_ZONE,
+                     .minute = GPS_info->tim.minute,
+                     .second = GPS_info->tim.second
+                 };
 
-                // xSemaphoreGive(parameters->mutex_data);
-            // }
+                 xSemaphoreGive(parameters->mutex_data);
+             }
             break;
-        case GPS_UNKNOWN:
-            GPS::GPSLog.logW("Unkown statement : %s", (char*)event_data);
-            break;
+        
         default:
             break;
     }
@@ -93,24 +106,24 @@ void GPS::task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t
 
 void GPS::task_GPS(void *_parameters)
 {
-    // GPS_task_t *parameters = (GPS_task_t *)_parameters;
-    // while (1)
-    // {
-    //     if (xSemaphoreTake((*parameters).mutex_data, portMAX_DELAY) == pdTRUE)
-    //     {
-    //         const int rxBytes = uart_read_bytes(UART_NUM_2, parameters->data, GPS::RX_BUFFER_SIZE * 1, GPS::interval);
-    //         if (rxBytes > 0)
-    //         {
-    //             parameters->data[rxBytes] = 0;
-    //             // GPS::GPSLog.logI("Get data: \n%s", parameters->data);
-    //         }
+     GPS_task_t *parameters = (GPS_task_t *)_parameters;
+     while (1)
+     {
+         if (xSemaphoreTake((*parameters).mutex_data, portMAX_DELAY) == pdTRUE)
+         {
+             const int rxBytes = uart_read_bytes(UART_NUM_2, parameters->data, GPS::RX_BUFFER_SIZE * 1, GPS::interval);
+             if (rxBytes > 0)
+             {
+                 parameters->data[rxBytes] = 0;
+                  GPS::GPSLog.logI("Get data: \n%s", parameters->data);
+             }
 
-    //         xSemaphoreGive(parameters->mutex_data);
-    //     }
-    // }
+             xSemaphoreGive(parameters->mutex_data);
+         }
+     }
 }
 
-GPS_info_t GPS::get_location()
+const GPS_info_t GPS::get_location()
 {
     GPS_info_t gps_info;
     if (xSemaphoreTake(this->parameters.mutex_data, portMAX_DELAY) == pdTRUE)
@@ -119,6 +132,7 @@ GPS_info_t GPS::get_location()
 
         xSemaphoreGive(this->parameters.mutex_data);
     }
+
     return gps_info;
 }
 
@@ -154,36 +168,42 @@ void Ultrasonic::task_Ultrasonic(void *_parameters)
         switch (err)
         {
             case ESP_ERR_ULTRASONIC_PING:
-                Ultrasonic::UltrasonicLog.logI("Cannot ping (device is in invalid state)\n");
+                Ultrasonic::UltrasonicLog.logE("Cannot ping (device is in invalid state)\n");
                 break;
             case ESP_ERR_ULTRASONIC_PING_TIMEOUT:
-                Ultrasonic::UltrasonicLog.logI("Ping timeout (no device found)\n");
+                Ultrasonic::UltrasonicLog.logE("Ping timeout (no device found)\n");
                 break;
             case ESP_ERR_ULTRASONIC_ECHO_TIMEOUT:
-                Ultrasonic::UltrasonicLog.logI("Echo timeout (i.e. distance too big)\n");                    
+                Ultrasonic::UltrasonicLog.logE("Echo timeout (i.e. distance too big)\n");                    
                 break;
             default:
-                Ultrasonic::UltrasonicLog.logI(esp_err_to_name(err));
+                //Ultrasonic::UltrasonicLog.logI(esp_err_to_name(err));
                 // printf("%s\n", esp_err_to_name(res));
         }
 
-        vTaskDelay(pdMS_TO_TICKS(3000));
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 
-std::string Ultrasonic::get_distance()
+float Ultrasonic::get_distance()
 {
     // std::string dist = "";
-    std::string dist = "";
+    float dist = 0;
     if (xSemaphoreTake(this->parameters.mutex_dist, portMAX_DELAY) == pdTRUE)
     {
-        dist = std::to_string(*(this->parameters.dist));
+        dist = *(this->parameters.dist);
 
         xSemaphoreGive(this->parameters.mutex_dist);
     }
     return dist;
 }
 
+
+
+/**
+ * @class Humiture 
+ * 
+ */
 MyLog Humiture::HumitureLog(LOG_TAG_HUMITURE);
 
 Humiture::Humiture(gpio_num_t pin = PIN_HUMITURE): parameters({.pin = pin, .humidity = new int16_t, .temperature = new int16_t, .sensor_type = DHT_TYPE_DHT11, .mutex_humiture = xSemaphoreCreateMutex()})
@@ -240,7 +260,11 @@ int16_t HumiAndTemp::getTemperature()
     return this->temperature;
 }
 
-// Servo implementation
+
+/**
+ * @class Servo
+ *  
+ */
 MyLog Servo::ServoLog(LOG_TAG_SERVO);
 
 Servo::Servo(gpio_num_t pin = PIN_SERVO, ledc_channel_t chan = LEDC_CHANNEL_0) 
@@ -275,6 +299,10 @@ void Servo::task_Servo()
     Servo::ServoLog.logI(esp_err_to_name(err_back));
 }
 
+/**
+ * @class Led
+ * 
+ */
 Led::Led(gpio_num_t pin, gpio_mode_t mode)
 {
     this->pin = pin;
@@ -287,5 +315,15 @@ Led::Led(gpio_num_t pin, gpio_mode_t mode)
 void Led::toggle_led()
 {   
     this->s_led_state = !this->s_led_state;
+    gpio_set_level(this->pin, this->s_led_state);
+}
+
+void Led::led_lightUp(){
+    this->s_led_state = 1;
+    gpio_set_level(this->pin, this->s_led_state);
+}
+
+void Led::led_lightDown(){
+    this->s_led_state = 0;
     gpio_set_level(this->pin, this->s_led_state);
 }
