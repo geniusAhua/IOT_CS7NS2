@@ -25,14 +25,14 @@ public class websocketServer {
     @OnOpen
     public void onOpen(Session session){
         MqttPubSubService mqttPubSubService = new MqttPubSubService();
-        AWSIotTopic topic_height = new TrashHeightTopic("trash_height", AWSIotQos.QOS0, this);
-        mqttPubSubService.subscribeMessage(topic_height);
-        logger.info("trash_height");
+        AWSIotTopic smartBinInfo = new TrashHeightTopic("SmartBinInfo", AWSIotQos.QOS0, this);
+        mqttPubSubService.subscribeMessage(smartBinInfo);
+        logger.info("Subscribe Smart Bin Information");
 
 
-        AWSIotTopic topic_humidity = new TrashHeightTopic("trash_humidity", AWSIotQos.QOS0, this);
-        mqttPubSubService.subscribeMessage(topic_humidity);
-        logger.info("trash_humidity");
+//        AWSIotTopic topic_humidity = new TrashHeightTopic("trash_humidity", AWSIotQos.QOS0, this);
+//        mqttPubSubService.subscribeMessage(topic_humidity);
+//        logger.info("trash_humidity");
 
         this.session = session;
         webSocketSet.add(this);
