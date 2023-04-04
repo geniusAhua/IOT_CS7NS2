@@ -1,6 +1,5 @@
 dashboard/node_modules
 **/build/
-**/sdkconfig
 **/sdkconfig.old
 **/.vscode
 **/**.DS_Store
