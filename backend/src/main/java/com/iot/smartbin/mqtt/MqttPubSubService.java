@@ -18,12 +18,11 @@ public class MqttPubSubService {
     private static final int TIMEOUT = 3000; // milliseconds
     private static final AWSIotQos QOS0 = AWSIotQos.QOS0;
     private static final AWSIotQos QOS1 = AWSIotQos.QOS1;
-
-    @Autowired
-    private MQTTConfig mqttConfig;
-
+//    @Autowired
+//    private MQTTConfig mqttConfig;
     // publish a message to aws iot platform
     public void publishMessage(String topic, Object payload) {
+        MQTTConfig mqttConfig = new MQTTConfig();
         AWSIotMqttClient client = mqttConfig.getClient();
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -36,6 +35,7 @@ public class MqttPubSubService {
 
     // subscribe a topic on aws iot platform
     public void subscribeMessage(AWSIotTopic topic) {
+        MQTTConfig mqttConfig = new MQTTConfig();
         AWSIotMqttClient client = mqttConfig.getClient();
         try {
             client.subscribe(topic, TIMEOUT);

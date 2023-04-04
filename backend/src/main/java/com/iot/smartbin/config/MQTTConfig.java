@@ -14,32 +14,30 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Slf4j
 public class MQTTConfig {
-    @Value("${clientEndpoint}")
-    private String clientEndpoint;
+//    @Value("${clientEndpoint}")
+    private String clientEndpoint = "a3ravxmuj0c4e2-ats.iot.eu-west-1.amazonaws.com";
 
-    @Value("${clientId}")
-    private String clientId;
+//    @Value("${clientId}")
+    private String clientId = "smartbin-backend";
 
-    @Value("${accessKey}")
-    private String accessKey;
+//    @Value("${accessKey}")
+    private String accessKey = "AKIA26U2W4737NMDR4E5";
 
-    @Value("${secretAccessKey}")
-    private String secretAccessKey;
+//    @Value("${secretAccessKey}")
+    private String secretAccessKey = "Hg+B17edOO9X8qIEsrYbZK46uih5gBfth8TNOAxv";
 
     private AWSIotMqttClient client;
 
     public AWSIotMqttClient getClient() {
-        if (client == null) {
+        if(client == null){
             client = new AWSIotMqttClient(clientEndpoint, clientId, accessKey, secretAccessKey, null);
             try {
                 client.connect();
             } catch (AWSIotException e) {
                 e.printStackTrace();
             }
-
-            log.info("Connected!");
         }
-
+        log.info("Connected!");
         return client;
     }
 }

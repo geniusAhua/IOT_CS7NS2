@@ -8,4 +8,7 @@ dashboard/node_modules
 **/cert
 =======
 **/.idea
+**/managed_components
+**/demo
+**/tmp
 >>>>>>> Stashed changes
