@@ -20,6 +20,8 @@ public class MyObject {
 
         InputStream objectContent = s3Object.getObjectContent();
         byte[] content = objectContent.readAllBytes();
+        objectContent.close();
+        s3Object.close();
         return Arrays.toString(content);
     }
 
