@@ -1,11 +1,9 @@
 package com.iot.smartbin.mqtt;
 
 import com.amazonaws.services.iot.client.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iot.smartbin.config.MQTTConfig;
 import com.iot.smartbin.mqtt.model.PublishListener;
-import com.iot.smartbin.mqtt.model.MyTopic;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,19 +12,18 @@ import org.springframework.stereotype.Service;
  * @date 2023/2/27 13:58
  */
 @Service
+@Slf4j
 public class MqttPubSubService {
     private static final int TIMEOUT = 3000; // milliseconds
     private static final AWSIotQos QOS0 = AWSIotQos.QOS0;
     private static final AWSIotQos QOS1 = AWSIotQos.QOS1;
-//    @Autowired
-//    private MQTTConfig mqttConfig;
+
     // publish a message to aws iot platform
     public void publishMessage(String topic, Object payload) {
         MQTTConfig mqttConfig = new MQTTConfig();
         AWSIotMqttClient client = mqttConfig.getClient();
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            PublishListener message = new PublishListener(topic, QOS0, mapper.writeValueAsString(payload));
+            PublishListener message = new PublishListener(topic, QOS0, payload.toString());
             client.publish(message, TIMEOUT);
         } catch (Exception e) {
             e.printStackTrace();
