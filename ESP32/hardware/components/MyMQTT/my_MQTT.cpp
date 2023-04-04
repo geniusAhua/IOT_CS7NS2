@@ -924,7 +924,6 @@ void MQTT::Subscribe(std::string topic, std::function<void(const std::string top
 
                     if(xSemaphoreTake(MQTT::mutex_map_subTopic_callback, portMAX_DELAY) == pdTRUE){
                         MQTT::map_subTopic_callback.insert(std::pair<std::string, std::function<void(const std::string topic, const std::string message)>>(topic, callback));
-                        printf("topic: %s, is? %d\n", topic.c_str(), MQTT::map_subTopic_callback.contains(topic));
                         xSemaphoreGive(MQTT::mutex_map_subTopic_callback);
                     }
                     MQTT::task_sub_check_timeout(packetId);

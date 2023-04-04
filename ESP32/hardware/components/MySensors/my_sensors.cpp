@@ -213,17 +213,23 @@ Humiture::Humiture(gpio_num_t pin = PIN_HUMITURE): parameters({.pin = pin, .humi
 void Humiture::task_Humiture(void *_parameters)
 {
     Humiture_task_t *parameters = (Humiture_task_t*) _parameters;
+    int16_t temperature = 240;
+    int16_t humidity = 500;
     esp_err_t err = ESP_FAIL;
     while(1)
     {
+        err = dht_read_data(parameters->sensor_type, parameters->pin, &humidity, &temperature);
+        Humiture::HumitureLog.logI("%s, ----> humidity: %d, temperature: %d.\n", esp_err_to_name(err), humidity, temperature);
+
         if (xSemaphoreTake(parameters->mutex_humiture, portMAX_DELAY) == pdTRUE)
         {
-            err = dht_read_data(parameters->sensor_type, parameters->pin, parameters->humidity, parameters->temperature);
+            *parameters->humidity = humidity;
+            *parameters->temperature = temperature;
 
             xSemaphoreGive(parameters->mutex_humiture);
         }
         
-        Humiture::HumitureLog.logI(esp_err_to_name(err));
+        
         vTaskDelay(pdMS_TO_TICKS(3000));
     }
 }
