@@ -48,35 +48,40 @@ uint8_t emer_level = 0;
 void task_bin_open(void *parameters){
     xEventGroupSetBits(MyEventLoop::smartBin_event_group(), BIN_OPEN);
 
-    servo->task_Servo();
-
+    if(!isOpen) {
+        isOpen = true;
+        servo->task_Servo();
+    }
     
     vTaskDelete(NULL);
 }
 
 void task_bin_close(void *parameters){
     xEventGroupClearBits(MyEventLoop::smartBin_event_group(), BIN_OPEN);
-
-    green->led_lightDown();
-    yellow->led_lightDown();
-    red->led_lightUp();
-    servo->task_Servo();
-    
+    if(isOpen){
+        isOpen = false;
+        green->led_lightDown();
+        yellow->led_lightDown();
+        red->led_lightUp();
+        servo->task_Servo();
+    }
     vTaskDelete(NULL);
 }
 
 void task_bin_compress(void *parameters){
-    xEventGroupClearBits(MyEventLoop::smartBin_event_group(), BIN_OPEN);
+    if(isOpen){
+        xEventGroupClearBits(MyEventLoop::smartBin_event_group(), BIN_OPEN);
 
-    green->led_lightDown();
-    yellow->led_lightDown();
-    red->led_lightUp();
-    servo->task_Servo();
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    servo->task_Servo();
-    red->led_lightDown();
+        green->led_lightDown();
+        yellow->led_lightDown();
+        red->led_lightUp();
+        servo->task_Servo();
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        servo->task_Servo();
+        red->led_lightDown();
 
-    xEventGroupSetBits(MyEventLoop::smartBin_event_group(), BIN_OPEN);
+        xEventGroupSetBits(MyEventLoop::smartBin_event_group(), BIN_OPEN);
+    }
     
     vTaskDelete(NULL);
 }
@@ -209,6 +214,11 @@ void set_up()
     green = new Led(PIN_GREEN, OUTPUT_MODE);
     yellow = new Led(PIN_YELLOW, OUTPUT_MODE);
     red = new Led(PIN_RED, OUTPUT_MODE);
+    if(!isOpen){
+        green->led_lightDown();
+        yellow->led_lightDown();
+        red->led_lightUp();
+    }
     xTaskCreate(task_dect_distance, TASK_NAME_DETECT_DISTANCE, 1024 * 4, NULL, 2, NULL);
 
     demoLog.logI("Start WIFI and MQTT init\n!");
@@ -222,12 +232,7 @@ void set_up()
 
     demoLog.logI("Initialization has finished!\n\n");
     xTaskCreate(task_publish_info, TASK_NAME_PUBLISH_CYCLE, 1024 * 5, NULL, 3, NULL);
-
-    if(!isOpen){
-        green->led_lightDown();
-        yellow->led_lightDown();
-        red->led_lightUp();
-    }
+    
 }
 
 extern "C" void app_main(void)
