@@ -64,6 +64,8 @@ void WiFi::_connect(){
 }
 
 void WiFi::initNVS(){// first step
+
+    wifiLog.logI("0. initiate NVS storage.");
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         /* NVS partition was truncated
@@ -74,8 +76,6 @@ void WiFi::initNVS(){// first step
         ESP_ERROR_CHECK(nvs_flash_init());
     }
     
-    wifiLog.logI("0. initiate NVS storage.");
-    ESP_ERROR_CHECK(nvs_flash_init());
 
     wifiLog.logI("1. WIFI initiation phase.");
     //1.1 initialize;
@@ -89,7 +89,7 @@ void WiFi::initNVS(){// first step
     esp_wifi_init(&_wifi_init_config);
 }
 
-void WiFi::initWifiConnection(const std::string ssid, const std::string pwd){
+void WiFi::initWifiConnection(const std::string &ssid, const std::string &pwd){
     wifiLog.logI("ssid: %s, pwd: %s", ssid.data(), pwd.data());
     wifi_config_t wifi_config = {
         .sta = {
@@ -103,16 +103,18 @@ void WiFi::initWifiConnection(const std::string ssid, const std::string pwd){
             },
         },
     };
-    memset(wifi_config.sta.ssid, 0, sizeof(wifi_config.sta.ssid));
-    memset(wifi_config.sta.password, 0, sizeof(wifi_config.sta.password));
-    std::copy(ssid.begin(), ssid.end(), wifi_config.sta.ssid);
-    std::copy(pwd.begin(), pwd.end(), wifi_config.sta.password);
-
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+    //memset(wifi_config.sta.ssid, 0, sizeof(wifi_config.sta.ssid));
+    //memset(wifi_config.sta.password, 0, sizeof(wifi_config.sta.password));
+    //std::copy(ssid.begin(), ssid.end(), wifi_config.sta.ssid);
+    //std::copy(pwd.begin(), pwd.end(), wifi_config.sta.password);
+    strncpy(reinterpret_cast<char*>(wifi_config.sta.ssid), ssid.c_str(), sizeof(wifi_config.sta.ssid) - 1);
+    strncpy(reinterpret_cast<char*>(wifi_config.sta.password), pwd.c_str(), sizeof(wifi_config.sta.password) - 1);
 
     wifiLog.logI("2. WIFI configure phase.");
     //2.1 set wifi mode;
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
 
     wifiLog.logI("3. WIFI starting phase.");
     //3.1 start wifi;

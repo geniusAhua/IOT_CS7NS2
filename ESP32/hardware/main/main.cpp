@@ -10,6 +10,11 @@
 #include "my_event_loop.h"
 #include "my_sensors.h"
 #include "my_MQTT.h"
+#include "my_OTA.h"
+
+//#ifndef CONFIG_EXAMPLE_USE_CERT_BUNDLE
+//#error "In this SmartBin demo, you must set USE_CERT_BUNDLE, this configuration!"
+//#endif
 
 // ESP32 GPIO12 can not be set to high
 
@@ -27,6 +32,8 @@ Humiture *sensorHumiture;
 int num = 0;
 uint8_t s_led_state = 0;
 
+bool isOpen = false;
+
 Led *red;
 Led *yellow;
 Led *green;
@@ -38,11 +45,66 @@ Led *green;
  */
 uint8_t emer_level = 0;
 
+void task_bin_open(void *parameters){
+    xEventGroupSetBits(MyEventLoop::smartBin_event_group(), BIN_OPEN);
 
+    servo->task_Servo();
 
-void test_sub_callback(const std::string topic, const std::string msg)
+    
+    vTaskDelete(NULL);
+}
+
+void task_bin_close(void *parameters){
+    xEventGroupClearBits(MyEventLoop::smartBin_event_group(), BIN_OPEN);
+
+    green->led_lightDown();
+    yellow->led_lightDown();
+    red->led_lightUp();
+    servo->task_Servo();
+    
+    vTaskDelete(NULL);
+}
+
+void task_bin_compress(void *parameters){
+    xEventGroupClearBits(MyEventLoop::smartBin_event_group(), BIN_OPEN);
+
+    green->led_lightDown();
+    yellow->led_lightDown();
+    red->led_lightUp();
+    servo->task_Servo();
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    servo->task_Servo();
+    red->led_lightDown();
+
+    xEventGroupSetBits(MyEventLoop::smartBin_event_group(), BIN_OPEN);
+    
+    vTaskDelete(NULL);
+}
+
+void instruction_callback(const std::string topic, const std::string msg)
 {
     demoLog.logI("test_sub_callback==>topic: %s, msg: %s", topic.data(), msg.data());
+
+    DynamicJsonDocument json_msg(1024);
+    deserializeJson(json_msg, msg);
+
+    uint8_t _type = json_msg["type"];
+
+    switch(_type){
+        case 0:
+            xTaskCreate(task_bin_open, TASK_NAME_BIN_OPEN, 1024 * 3, NULL, 1, NULL);
+            break;
+        case 1:
+            xTaskCreate(task_bin_close, TASK_NAME_BIN_CLOSE, 1024 * 3, NULL, 1, NULL);
+            break;
+        case 2:
+            xTaskCreate(task_bin_compress, TASK_NAME_BIN_COMPRESS, 1024 * 3, NULL, 1, NULL);
+            break;
+        default:
+            demoLog.logW("Unknown type: %d\n\n", _type);
+            break;
+    }
+
     return;
 }
 
@@ -51,11 +113,11 @@ void task_publish_info(void *parameters){
     while(1){
         DynamicJsonDocument SmartBinInfo(1024);
         DynamicJsonDocument GPSJson(1024);
-        DynamicJsonDocument UltrasonicJson(sizeof(float));
-        DynamicJsonDocument HumitureJson(sizeof(uint16_t) * 2 + 10);
+        DynamicJsonDocument UltrasonicJson(sizeof(uint32_t) + 100);
+        DynamicJsonDocument HumitureJson(sizeof(uint16_t) * 2 + 100);
 
         GPS_info_t gps_info = sensorGPS->get_location();
-        float ultrasonic_info = sensorUltrasonic->get_distance();
+        uint32_t ultrasonic_info = sensorUltrasonic->get_distance();
         HumiAndTemp humiture_info = sensorHumiture->getHumiTemp();
         uint8_t _level = emer_level;
 
@@ -72,6 +134,7 @@ void task_publish_info(void *parameters){
         SmartBinInfo["GPS"] = GPSJson;
         SmartBinInfo["ultrasonic"] = UltrasonicJson;
         SmartBinInfo["humiture"] = HumitureJson;
+        SmartBinInfo["EmergencyLevel"] = _level;
 
         string msg;
         serializeJson(SmartBinInfo, msg);
@@ -83,53 +146,14 @@ void task_publish_info(void *parameters){
     vTaskDelete(NULL);
 }
 
-/**
- * logic:
- *  - Ultrasonic
- *      - get capacity data and send to aws iot
- *  - Led (work with ultrasonic):
- *      - three levels -- Low: turn green; Medium: turn yello; High: red;
- *  - GPS:
- *      - get geo location data and send to aws iot
- *  - Humidity:
- *      - get humidity data and send to aws iot
-*/
-void set_up()
-{
-    demoLog.logI("Create a FreeRTOS Event Group and Initialize the customized EventLoop.");
-    MyEventLoop::init();
-
-    demoLog.logI("Start Init!");
-
-    esp_log_level_set(LOG_TAG_MAIN, ESP_LOG_DEBUG);
-    WiFi::connect();
-
-    MQTT::Init();
-
-
-    MQTT::Subscribe(SUBSCRIBE_TOPIC1, &test_sub_callback);
-
-    sensorGPS = new GPS(PIN_GPS_RX, PIN_GPS_TX);
-    sensorUltrasonic = new Ultrasonic(GPIO_NUM_4, GPIO_NUM_5);
-    servo = new Servo(PIN_SERVO, LEDC_CHANNEL_0);
-    sensorHumiture = new Humiture(PIN_HUMITURE);
-    green = new Led(PIN_GREEN, OUTPUT_MODE);
-    yellow = new Led(PIN_YELLOW, OUTPUT_MODE);
-    red = new Led(PIN_RED, OUTPUT_MODE);
-
-    vTaskDelay(pdMS_TO_TICKS(500));
-
-    xTaskCreate(task_publish_info, TASK_NAME_PUBLISH_CYCLE, 1024 * 3, NULL, 3, NULL);
-}
-
-extern "C" void app_main(void)
-{
-    set_up();
-
-    float distance;
+void task_dect_distance(void *parameters){
+    uint32_t distance = 0;
+    uint32_t tmp_distance[3] = {0};
+    uint32_t pre_distance = 0;
     while(1){
+        xEventGroupWaitBits(MyEventLoop::smartBin_event_group(), BIN_OPEN, pdFALSE, pdFALSE, portMAX_DELAY);
         distance = sensorUltrasonic->get_distance();
-        
+        demoLog.logI("distance: %05d", distance);
         if(distance < DISTANCE_EMERGENCY){ // distance < 4cm
             emer_level = 2; //emergency
             
@@ -154,6 +178,63 @@ extern "C" void app_main(void)
 
         vTaskDelay(pdMS_TO_TICKS(100));
     }
+
+    vTaskDelete(NULL);
+}
+
+/**
+ * logic:
+ *  - Ultrasonic
+ *      - get capacity data and send to aws iot
+ *  - Led (work with ultrasonic):
+ *      - three levels -- Low: turn green; Medium: turn yello; High: red;
+ *  - GPS:
+ *      - get geo location data and send to aws iot
+ *  - Humidity:
+ *      - get humidity data and send to aws iot
+*/
+void set_up()
+{
+    demoLog.logI("Start Init!");
+
+    demoLog.logI("Create a FreeRTOS Event Group and Initialize the customized EventLoop.\n");
+    MyEventLoop::init();
+
+    demoLog.logI("Start detecting distance!!\n");
+    sensorGPS = new GPS(PIN_GPS_RX);
+    vTaskDelay(pdMS_TO_TICKS(500));
+    sensorUltrasonic = new Ultrasonic(GPIO_NUM_4, GPIO_NUM_5);
+    servo = new Servo(PIN_SERVO, LEDC_CHANNEL_0);
+    sensorHumiture = new Humiture(PIN_HUMITURE);
+    green = new Led(PIN_GREEN, OUTPUT_MODE);
+    yellow = new Led(PIN_YELLOW, OUTPUT_MODE);
+    red = new Led(PIN_RED, OUTPUT_MODE);
+    xTaskCreate(task_dect_distance, TASK_NAME_DETECT_DISTANCE, 1024 * 4, NULL, 2, NULL);
+
+    demoLog.logI("Start WIFI and MQTT init\n!");
+    WiFi::connect();
+    MQTT::Init();
+    OTA::Init();
+
+    vTaskDelay(pdMS_TO_TICKS(500));
+
+    MQTT::Subscribe(SUBSCRIBE_TOPIC2, instruction_callback);
+
+    demoLog.logI("Initialization has finished!\n\n");
+    xTaskCreate(task_publish_info, TASK_NAME_PUBLISH_CYCLE, 1024 * 5, NULL, 3, NULL);
+
+    if(!isOpen){
+        green->led_lightDown();
+        yellow->led_lightDown();
+        red->led_lightUp();
+    }
+}
+
+extern "C" void app_main(void)
+{
+    set_up();
+
+    
 
 //    DynamicJsonDocument doc(1024);
 //

@@ -13,7 +13,7 @@ class WiFi{
     static std::string PWD;
     static void _connect();
     static void initNVS();
-    static void initWifiConnection(const std::string ssid = WiFi::SSID, const std::string pwd = WiFi::PWD);
+    static void initWifiConnection(const std::string &ssid = WiFi::SSID, const std::string &pwd = WiFi::PWD);
     static void app_task(void *pt);
     static void do_disconnect();
     static void run_on_event(void* handler_arg, esp_event_base_t base, int32_t id, void* event_data);

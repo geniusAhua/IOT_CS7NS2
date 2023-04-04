@@ -26,7 +26,7 @@ const uint8_t GPS::TIME_ZONE = (+1);
 const uint16_t GPS::YEAR_BASE = 2000;   //data in GPS starts from 2000
 
 
-GPS::GPS(uint32_t gpio_rx, uint32_t gpio_tx) : parameters{.mutex_data = xSemaphoreCreateMutex()}
+GPS::GPS(uint32_t gpio_rx) : parameters{.mutex_data = xSemaphoreCreateMutex()}
 {
 
     //this->gpio_tx = gpio_tx == UART_PIN_NO_CHANGE ? GPIO_NUM_1 : gpio_tx;
@@ -104,25 +104,6 @@ void GPS::task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t
     }
 }
 
-void GPS::task_GPS(void *_parameters)
-{
-     GPS_task_t *parameters = (GPS_task_t *)_parameters;
-     while (1)
-     {
-         if (xSemaphoreTake((*parameters).mutex_data, portMAX_DELAY) == pdTRUE)
-         {
-             const int rxBytes = uart_read_bytes(UART_NUM_2, parameters->data, GPS::RX_BUFFER_SIZE * 1, GPS::interval);
-             if (rxBytes > 0)
-             {
-                 parameters->data[rxBytes] = 0;
-                  GPS::GPSLog.logI("Get data: \n%s", parameters->data);
-             }
-
-             xSemaphoreGive(parameters->mutex_data);
-         }
-     }
-}
-
 const GPS_info_t GPS::get_location()
 {
     GPS_info_t gps_info;
@@ -142,7 +123,7 @@ const GPS_info_t GPS::get_location()
 */
 MyLog Ultrasonic::UltrasonicLog(LOG_TAG_SENSORS_ULTRASONIC);
 
-Ultrasonic::Ultrasonic(gpio_num_t trigger = PIN_ULTRASONIC_TRIGGER, gpio_num_t echo = PIN_ULTRASONIC_ECHO) : parameters({.dist = new float, .mutex_dist = xSemaphoreCreateMutex(), .sensor = {.trigger_pin = trigger, .echo_pin = echo}})
+Ultrasonic::Ultrasonic(gpio_num_t trigger = PIN_ULTRASONIC_TRIGGER, gpio_num_t echo = PIN_ULTRASONIC_ECHO) : parameters({.dist = new uint32_t, .mutex_dist = xSemaphoreCreateMutex(), .sensor = {.trigger_pin = trigger, .echo_pin = echo}})
 {
     this->trigger = trigger;
     this->echo = echo;
@@ -154,21 +135,38 @@ void Ultrasonic::task_Ultrasonic(void *_parameters)
     Ultrasonic_task_t *parameters = (Ultrasonic_task_t*)_parameters;
     esp_err_t err = ESP_FAIL;
     ESP_ERROR_CHECK(ultrasonic_init(&parameters->sensor));
+    uint32_t current_tick;
+    uint32_t end_tick;
+    uint32_t distance;
+    uint32_t total_value_distance;
+    uint32_t total_count;
     while(1) 
     {
-
+        current_tick = xTaskGetTickCount();
+        end_tick = current_tick + pdMS_TO_TICKS(DISTANCE_DETECT_INTERVAL);
+        distance = 0;
+        total_value_distance = 0;
+        total_count = 0;
+        
+        while(current_tick < end_tick){
+            err = ultrasonic_measure_cm(&parameters->sensor, MAX_DISTANCE_CM, &distance);
+            total_value_distance += distance;
+            ++total_count;
+            current_tick = xTaskGetTickCount();
+            vTaskDelay(pdMS_TO_TICKS(7));
+        }
+        //printf("count: %ld\n", total_count);
         if (xSemaphoreTake(parameters->mutex_dist, portMAX_DELAY) == pdTRUE) 
         {
             
-            err = ultrasonic_measure(&parameters->sensor, MAX_DISTANCE_CM, parameters->dist);
-            
+            *parameters->dist = total_value_distance / total_count;
             xSemaphoreGive(parameters->mutex_dist);
         }
         
         switch (err)
         {
             case ESP_ERR_ULTRASONIC_PING:
-                Ultrasonic::UltrasonicLog.logE("Cannot ping (device is in invalid state)\n");
+                //Ultrasonic::UltrasonicLog.logE("Cannot ping (device is in invalid state)\n");
                 break;
             case ESP_ERR_ULTRASONIC_PING_TIMEOUT:
                 Ultrasonic::UltrasonicLog.logE("Ping timeout (no device found)\n");
@@ -179,16 +177,17 @@ void Ultrasonic::task_Ultrasonic(void *_parameters)
             default:
                 //Ultrasonic::UltrasonicLog.logI(esp_err_to_name(err));
                 // printf("%s\n", esp_err_to_name(res));
+                break;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 
-float Ultrasonic::get_distance()
+uint32_t Ultrasonic::get_distance()
 {
     // std::string dist = "";
-    float dist = 0;
+    uint32_t dist = 0;
     if (xSemaphoreTake(this->parameters.mutex_dist, portMAX_DELAY) == pdTRUE)
     {
         dist = *(this->parameters.dist);
@@ -291,11 +290,11 @@ Servo::Servo(gpio_num_t pin = PIN_SERVO, ledc_channel_t chan = LEDC_CHANNEL_0)
 
 void Servo::task_Servo() 
 {
-    esp_err_t err_turn = iot_servo_write_angle(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 186);
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    esp_err_t err_turn = iot_servo_write_angle(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 180);
     Servo::ServoLog.logI(esp_err_to_name(err_turn));
-    esp_err_t err_back = iot_servo_write_angle(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 0);
     vTaskDelay(pdMS_TO_TICKS(2000));
+    
+    esp_err_t err_back = iot_servo_write_angle(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 0);
     Servo::ServoLog.logI(esp_err_to_name(err_back));
 }
 

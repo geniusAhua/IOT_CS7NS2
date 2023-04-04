@@ -33,7 +33,6 @@ private:
     typedef struct
     {
         GPS_info_t GPS_info;
-        uint8_t *data;
         SemaphoreHandle_t mutex_data;
     } GPS_task_t;
 
@@ -51,11 +50,10 @@ private:
     static const uint8_t TIME_ZONE;
     static const uint16_t YEAR_BASE;
 
-    static void task_GPS(void *_data);
     static void task_GPS(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
 public:
-    GPS(uint32_t gpio_rx = UART_PIN_NO_CHANGE, uint32_t gpio_tx = UART_PIN_NO_CHANGE);
+    GPS(uint32_t gpio_rx = UART_PIN_NO_CHANGE);
     const GPS_info_t get_location();
     void add_handler(void(*handler)(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data));
     
@@ -66,7 +64,7 @@ class Ultrasonic
 private:
     typedef struct
     {
-        float *dist;
+        uint32_t *dist;
         SemaphoreHandle_t mutex_dist;
         ultrasonic_sensor_t sensor;
     } Ultrasonic_task_t;
@@ -79,7 +77,7 @@ private:
 
 public:
     Ultrasonic(gpio_num_t gpio_trigger, gpio_num_t gpio_echo);
-    float get_distance();
+    uint32_t get_distance();
 
     static void task_Ultrasonic(void *_dist);
 };
