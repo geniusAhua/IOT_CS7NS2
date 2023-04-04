@@ -9,6 +9,7 @@
     "@babylonjs/gui": "^5.47.0",
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
+    "@iconscout/react-unicons": "^2.0.2",
     "@mui/icons-material": "^5.11.9",
     "@mui/material": "^5.11.10",
     "@popperjs/core": "^2.11.6",
@@ -50,6 +51,7 @@
     "react-app-rewired": "^2.2.1",
     "react-babylonjs": "^3.1.15",
     "react-dom": "^18.2.0",
+    "react-icons": "^4.8.0",
     "react-native": "^0.71.3",
     "react-native-web": "^0.18.12",
     "react-redux": "^8.0.5",
@@ -69,8 +71,8 @@
     "webpack-bundle-analyzer": "^4.8.0"
   },
   "scripts": {
-    "start": "PORT=3001 HTTPS=true SSL_CRT_FILE=.cert/example.com+5.pem SSL_KEY_FILE=.cert/example.com+5-key.pem react-app-rewired start",
-    "start:pre": "PORT=3001 react-app-rewired start",
+    "start": "PORT=3000 HTTPS=true SSL_CRT_FILE=.cert/example.com+5.pem SSL_KEY_FILE=.cert/example.com+5-key.pem react-app-rewired start",
+    "start:pre": "PORT=3000 react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "starbuildt:pre": "cross-env REACT_APP_ENV=pre react-app-rewired start ",
