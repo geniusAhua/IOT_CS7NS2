@@ -180,7 +180,7 @@ export default () => {
                             setFocus(false)
                         }}
                     />
-                    {!focus && <Avatar src='' className={styles.avatar}/>}
+                    {!focus && <Avatar src={Open_bin} className={styles.avatar}/>}
                 </Space>
                 <List header='Bin' style={{ '--border-bottom': 'none' }}>
                     <Card>

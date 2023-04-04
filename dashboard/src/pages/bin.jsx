@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {FreeCamera, Vector3, HemisphericLight, MeshBuilder, StandardMaterial, Color3} from "@babylonjs/core";
 import SceneComponent from "./SceneComponent"; // uses above component in same directory
 import "../less/bin.less";
 import GUI from "babylonjs-gui";
 import { BinDataApi } from '../request/api';
+import { UilTemperature, UilWater, UilBell, UilHourglass } from '@iconscout/react-unicons'
+import { UilTrashAlt } from '@iconscout/react-unicons'
 
 let sphere;
 let cylinder;
@@ -48,35 +50,62 @@ const onRender = (scene) => {
         cylinder.rotation.y += (rpm / 60) * Math.PI * 2 * (deltaTimeInMillis / 1000);
     }
 };
-let params={userId:1}
-let weight:number
-let height:number
-BinDataApi({params}).then(res=>{
-        let info = JSON.parse(JSON.stringify(res))
-        weight = info.weight
-        height = info.height
-    }).catch(function(err){
-        console.log(err)
-    })
 
-let ws = new WebSocket('ws://localhost:8080/websocket/client');
-// 在客户端与服务端建立连接后触发
-ws.onopen = function() {
-    console.log("Connection open.");
-    ws.send('hello');
-};
-// 在服务端给客户端发来消息的时候触发
-ws.onmessage = function(res) {
-    console.log(res);       // 打印的是MessageEvent对象
-    console.log(res.data);  // 打印的是收到的消息
-};
 
 export default function Bin() {
+    const [data, setData] = React.useState({ temperature: 36, humidity: 310, EmergencyLevel: 1 });
+    const [temperature, setTemperature] = useState(null);
+    const [humidity, setHumidity] = useState(null);
+    const [emergencyLevel, setEmergencyLevel] = useState(null);
+    const [time,setTime] = useState(null)
+
+    useEffect(() => {
+        const ws = new WebSocket('ws://localhost:8080/websocket/client');
+        ws.onopen = function() {
+            console.log("Connection open.");
+        };
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const time_change = Change_time()
+            console.log(data,time)
+            setTemperature(data.humiture.temperature);
+            setHumidity(data.humiture.Humidity);
+            setEmergencyLevel(data.EmergencyLevel);
+            setTime(time_change)
+        };
+        return () => {
+            ws.close();
+        };
+    }, []);
+
+    function Change_time(){
+        const now = new Date();
+        const timestamp = now.getTime();
+        const randomDelay = Math.floor(Math.random() * (50 - 5 + 1) + 5);
+        const adjustedTimestamp = timestamp - randomDelay;
+        const adjustedDate = new Date(adjustedTimestamp);
+        const year = adjustedDate.getFullYear();
+        const month = adjustedDate.getMonth() + 1;
+        const day = adjustedDate.getDate();
+        const hour = adjustedDate.getHours();
+        const minute = adjustedDate.getMinutes();
+        const second = adjustedDate.getSeconds();
+        const time = `${year}-${month}-${day} ${hour}:${minute}:${second}`
+        return time
+    }
+
+
     return (
-        <div style={{width:"100%",height:"0%"}}>
-            <SceneComponent antialias onSceneReady={onSceneReady} onRender={onRender} id="my-canvas" style={{width:"100%",height:"60vh",marginTop:"5vh"}}/>
-            <h2 style={{position:"relative",left:"20%",marginTop:"-10vh"}}>Weight:  {weight}</h2>
-            <h2 style={{position:"relative",left:"20%"}}>Height:   {height}</h2>
+        <div style={{width: "100%", height: "100%"}}>
+            <SceneComponent antialias onSceneReady={onSceneReady} onRender={onRender} id="my-canvas"
+                            style={{width: "100%", height: "50vh", marginTop: "5vh",objectFit: "cover", objectPosition: "30% 50%"}}/>
+            <div style={{marginTop:"-2rem"}}>
+            <p style={{position: "relative", left: "20%", fontFamily: 'Knewave', fontSize:'.4rem'}}><UilTemperature style={{width:".4rem",height:".4rem",color:"#44A723",border:".2rem",border:"solid",borderRadius:"50%",marginRight:".3rem"}}/>Temperature: {temperature}</p>
+            <p style={{position: "relative", left: "20%", fontFamily: 'Knewave', fontSize:'.4rem'}}><UilWater style={{width:".4rem",height:".4rem",color:"#44A723",border:".2rem",border:"solid",borderRadius:"50%",marginRight:".3rem"}}/>Humidity: {humidity}</p>
+            <p style={{position: "relative", left: "20%", fontFamily: 'Knewave', fontSize:'.4rem'}}><UilBell style={{width:".4rem",height:".4rem",color:"#44A723",border:".2rem",border:"solid",borderRadius:"50%",marginRight:".3rem"}}/>EmergencyLevel: {emergencyLevel}</p>
+            <p style={{position: "relative", left: "20%", fontFamily: 'Knewave', fontSize:'.4rem'}}><UilHourglass style={{width:".4rem",height:".4rem",color:"#44A723",border:".2rem",border:"solid",borderRadius:"50%",marginRight:".3rem"}}/>Time: {time}</p>
+            </div>
+            <img src="https://i.328888.xyz/2023/04/04/ib3y1t.png" style={{width:"100%",height:"auto",position:"relative",bottom:"0px",zIndex:"-2"}}/>
         </div>
     )
 }
