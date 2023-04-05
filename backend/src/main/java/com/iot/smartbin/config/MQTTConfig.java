@@ -14,16 +14,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Slf4j
 public class MQTTConfig {
-//    @Value("${clientEndpoint}")
+
     private String clientEndpoint = null;
 
-//    @Value("${clientId}")
     private String clientId = null;
 
-//    @Value("${accessKey}")
     private String accessKey = null;
 
-//    @Value("${secretAccessKey}")
     private String secretAccessKey = null;
 
     private AWSIotMqttClient client;
