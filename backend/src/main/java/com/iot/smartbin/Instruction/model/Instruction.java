@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Instruction {
     @JsonProperty("type")
-    private String type;
+    private Integer type;
 }
