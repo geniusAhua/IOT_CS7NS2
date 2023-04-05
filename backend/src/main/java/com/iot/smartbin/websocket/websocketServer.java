@@ -29,11 +29,6 @@ public class websocketServer {
         mqttPubSubService.subscribeMessage(smartBinInfo);
         logger.info("Subscribe Smart Bin Information");
 
-
-//        AWSIotTopic topic_humidity = new TrashHeightTopic("trash_humidity", AWSIotQos.QOS0, this);
-//        mqttPubSubService.subscribeMessage(topic_humidity);
-//        logger.info("trash_humidity");
-
         this.session = session;
         webSocketSet.add(this);
         onlineCount++;

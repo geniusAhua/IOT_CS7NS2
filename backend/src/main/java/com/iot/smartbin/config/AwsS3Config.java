@@ -15,10 +15,10 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class AwsS3Config {
-    private String accessKey = "AKIA26U2W47353G4WYAM";
-    private String secretAccessKey = "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";
-    private String region = "eu-west-1";
-    private String endpoint = "https://s3.eu-west-1.amazonaws.com";
+    private String accessKey = null;
+    private String secretAccessKey = null;
+    private String region = null;
+    private String endpoint = null;
 
     public AmazonS3 getS3Client() {
         AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretAccessKey);
